@@ -31,7 +31,15 @@ function personName(female) {
 const phone = () => `+7 7${R(9)}${R(9)} ${100 + R(900)} ${10 + R(90)} ${10 + R(90)}`;
 const handle = () => pick(["star","pro","kz","show","top","best","event","art","vip","official"]) + "_" + pick(words).toLowerCase().replace(/[^a-zа-я]/g, "") + R(99);
 
-const VIDEOS = ["BigBuckBunny","ElephantsDream","ForBiggerBlazes","ForBiggerFun","ForBiggerJoyrides","ForBiggerMeltdowns","SubaruOutbackOnStreetAndDirt","TearsOfSteel","VolkswagenGTIReview","WeAreGoingOnBullrun","WhatCarCanYouGetForAGrand"].map((v) => `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/${v}.mp4`);
+// Проверенные рабочие mp4 (200 video/mp4). Дженерик-заглушки — но реально проигрываются.
+const VIDEOS = [
+  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
+  "https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4",
+  "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4",
+  "https://media.w3.org/2010/05/sintel/trailer.mp4",
+  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+  "https://www.w3schools.com/html/movie.mp4",
+];
 
 // Конфиг профессий: сегмент, доля женщин, компания?, цена [min,max,step], видео%, соцсети {ig,tt,yt}, теги, тэглайны, фрагменты «о себе»
 const P = {
