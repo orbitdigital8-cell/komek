@@ -116,14 +116,16 @@ for (let i = 0; i < N; i++) {
   const rating = (40 + R(11)) / 10; // 4.0..5.0
   const avatar = company ? `https://picsum.photos/seed/av${i}/400/400` : `https://randomuser.me/api/portraits/${female ? "women" : "men"}/${R(100)}.jpg`;
   const verified = chance(0.4);
-  const galleryCount = 1 + R(4);
-  const gallery = Array.from({ length: galleryCount }, (_, g) => `https://picsum.photos/seed/g${i}_${g}/800/600`);
+  const galleryCount = 2 + R(3); // 2–4 «рабочих» фото
+  const work = Array.from({ length: galleryCount }, (_, g) => `https://picsum.photos/seed/g${i}_${g}/800/600`);
+  const gallery = company ? work : [avatar, ...work]; // у людей первым — их портрет
   const video = chance(c.vid) ? pick(VIDEOS) : "";
   const tags = pickN(c.tags, 2 + R(3));
   const tagsSql = "ARRAY[" + tags.map((t) => `'${esc(t)}'`).join(",") + "]::text[]";
+  const gallerySql = "ARRAY[" + gallery.map((u) => `'${u}'`).join(",") + "]::text[]";
   const attrsSql = `'${esc(JSON.stringify(genAttrs(prof)))}'::jsonb`;
 
-  specialists.push(`('${id}',NULL,'${prof}','${esc(name)}','${esc(city)}','${esc(tagline)}','${esc(about)}',${price},${exp},'${avatar}','${video}',${tagsSql},${attrsSql},${rating},${verified},true)`);
+  specialists.push(`('${id}',NULL,'${prof}','${esc(name)}','${esc(city)}','${esc(tagline)}','${esc(about)}',${price},${exp},'${avatar}','${video}',${gallerySql},${tagsSql},${attrsSql},${rating},${verified},true)`);
 
   const ph = phone();
   const wa = chance(0.85) ? ph : "";
@@ -146,7 +148,7 @@ function batchInsert(head, rows, size = 200) {
 }
 
 let sql = "-- Массовые демо-анкеты (сгенерировано scripts/gen-bulk.mjs). Не редактировать вручную.\n\n";
-sql += batchInsert("insert into public.specialists (id, owner_id, profession, name, city, tagline, about, price_from, experience_years, avatar_url, video_url, tags, attributes, rating, verified, is_demo) values", specialists);
+sql += batchInsert("insert into public.specialists (id, owner_id, profession, name, city, tagline, about, price_from, experience_years, avatar_url, video_url, gallery, tags, attributes, rating, verified, is_demo) values", specialists);
 sql += batchInsert("insert into public.specialist_contacts (specialist_id, phone, whatsapp, telegram) values", contacts);
 sql += batchInsert("insert into public.specialist_socials (specialist_id, type, value, is_public, sort_order) values", socials);
 
