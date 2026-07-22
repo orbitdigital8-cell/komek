@@ -31,14 +31,11 @@ function personName(female) {
 const phone = () => `+7 7${R(9)}${R(9)} ${100 + R(900)} ${10 + R(90)} ${10 + R(90)}`;
 const handle = () => pick(["star","pro","kz","show","top","best","event","art","vip","official"]) + "_" + pick(words).toLowerCase().replace(/[^a-zа-я]/g, "") + R(99);
 
-// Проверенные рабочие mp4 (200 video/mp4). Дженерик-заглушки — но реально проигрываются.
+// Рабочие нейтральные mp4-заглушки (200 video/mp4). Без мультиков.
+// По-настоящему тематические видео — через Pexels/Pixabay API (нужен ключ).
 const VIDEOS = [
-  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
-  "https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4",
-  "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4",
-  "https://media.w3.org/2010/05/sintel/trailer.mp4",
   "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
+  "https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4",
 ];
 
 // Конфиг профессий: сегмент, доля женщин, компания?, цена [min,max,step], видео%, соцсети {ig,tt,yt}, теги, тэглайны, фрагменты «о себе»
@@ -86,6 +83,31 @@ function companyName(prof) {
   }
 }
 
+// Ключевые слова для тематических фото по профессии (loremflickr)
+const IMG_KW = {
+  organizer: ["event", "wedding", "banquet"],
+  tamada: ["wedding", "party", "celebration"],
+  host: ["event", "conference", "presentation"],
+  singer: ["singer", "concert", "microphone"],
+  dancer: ["dance", "dancer", "ballet"],
+  dance_group: ["dance", "dancers", "performance"],
+  animator: ["kids,party", "children,party", "balloons"],
+  musician: ["musician", "guitar", "violin"],
+  showman: ["fire,show", "stage", "performance"],
+  pyro: ["fireworks", "pyrotechnics", "sparks"],
+  sound: ["concert", "dj", "loudspeaker"],
+  photographer: ["wedding,photography", "photographer", "camera"],
+  videographer: ["videographer", "camera", "filming"],
+  photobooth: ["photobooth", "party", "portrait"],
+  decorator: ["wedding,decoration", "flowers", "table,setting"],
+  visagiste: ["makeup", "beauty", "cosmetics"],
+  cake: ["cake", "dessert", "pastry"],
+  nanny: ["child", "kids", "childcare"],
+  housekeeper: ["cleaning", "housekeeping", "home"],
+  cook: ["food", "cooking", "cuisine"],
+  driver: ["car", "minivan", "road"],
+};
+
 function genAttrs(prof) {
   switch (prof) {
     case "nanny": return { age: 25 + R(35), education: pick(["педагог", "мед. образование", "воспитатель", "без спец. образования"]), medbook: chance(0.8), kids_age: pick(["до 3 лет", "3–7 лет", "школьники", "любой"]) };
@@ -116,9 +138,10 @@ for (let i = 0; i < N; i++) {
   const rating = (40 + R(11)) / 10; // 4.0..5.0
   const avatar = company ? `https://picsum.photos/seed/av${i}/400/400` : `https://randomuser.me/api/portraits/${female ? "women" : "men"}/${R(100)}.jpg`;
   const verified = chance(0.4);
-  const galleryCount = 2 + R(3); // 2–4 «рабочих» фото
-  const work = Array.from({ length: galleryCount }, (_, g) => `https://picsum.photos/seed/g${i}_${g}/800/600`);
-  const gallery = company ? work : [avatar, ...work]; // у людей первым — их портрет
+  const kws = IMG_KW[prof] || ["event"];
+  const work = Array.from({ length: 3 }, (_, g) => `https://loremflickr.com/800/600/${kws[g % kws.length]}?lock=${i * 13 + g + 1}`);
+  // У людей первым — их лицо (аватар), дальше — тематические фото работ; у компаний — только работы
+  const gallery = company ? work : [avatar, ...work];
   const video = chance(c.vid) ? pick(VIDEOS) : "";
   const tags = pickN(c.tags, 2 + R(3));
   const tagsSql = "ARRAY[" + tags.map((t) => `'${esc(t)}'`).join(",") + "]::text[]";
