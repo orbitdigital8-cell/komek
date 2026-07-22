@@ -30,7 +30,7 @@ export default function Header() {
     >
       <div
         className="container"
-        style={{ display: "flex", alignItems: "center", gap: 16, height: 64 }}
+        style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 64 }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, fontWeight: 800, fontSize: "1.2rem" }}>
           <span
@@ -66,7 +66,8 @@ export default function Header() {
                 Войти
               </Link>
               <Link href="/register?role=specialist" className="btn btn-primary btn-sm">
-                Разместить анкету
+                <span className="cta-full">Разместить анкету</span>
+                <span className="cta-short">Анкета</span>
               </Link>
             </>
           ) : (

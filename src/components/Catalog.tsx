@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import SpecialistCard from "@/components/SpecialistCard";
-import { SEGMENT_LABEL, type Profession, type Segment, type Specialist } from "@/lib/types";
+import { type Profession, type Segment, type Specialist } from "@/lib/types";
 
 type SegFilter = Segment | "all";
 
@@ -93,8 +93,8 @@ export default function Catalog({
 
   const segTabs: { key: SegFilter; label: string; emoji: string }[] = [
     { key: "all", label: "Все", emoji: "✦" },
-    { key: "toi", label: SEGMENT_LABEL.toi, emoji: "🎉" },
-    { key: "general", label: SEGMENT_LABEL.general, emoji: "🏠" },
+    { key: "toi", label: "Для тоя", emoji: "🎉" },
+    { key: "general", label: "Бытовые", emoji: "🏠" },
   ];
 
   return (

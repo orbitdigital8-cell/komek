@@ -54,6 +54,8 @@ html,
 body {
   padding: 0;
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 body {
   background: var(--bg);
@@ -368,5 +370,36 @@ button {
   }
   .editor-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---- Мобильные ---- */
+.cta-short {
+  display: none;
+}
+@media (max-width: 560px) {
+  .container,
+  .container-narrow {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .h1 {
+    font-size: 1.72rem;
+  }
+  .lead {
+    font-size: 1rem;
+  }
+  .cta-full {
+    display: none;
+  }
+  .cta-short {
+    display: inline;
+  }
+  .btn {
+    padding: 9px 15px;
+  }
+  .btn-sm {
+    padding: 7px 11px;
+    font-size: 0.82rem;
   }
 }
