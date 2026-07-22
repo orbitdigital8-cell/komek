@@ -1,0 +1,41 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useShortlist } from "@/lib/shortlist";
+
+export default function ShortlistBar() {
+  const { ids, ready, clear } = useShortlist();
+  const pathname = usePathname();
+
+  // Не показываем на самой странице избранного и пока пусто
+  if (!ready || ids.length === 0 || pathname === "/shortlist") return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: "50%",
+        transform: "translateX(-50%)",
+        bottom: 20,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "10px 12px 10px 18px",
+        borderRadius: 999,
+        background: "var(--surface)",
+        border: "1px solid var(--border-strong)",
+        boxShadow: "var(--shadow-lg)",
+      }}
+    >
+      <span style={{ fontWeight: 650, fontSize: "0.92rem" }}>
+        ❤️ В избранном: {ids.length}
+      </span>
+      <button onClick={clear} className="btn btn-ghost btn-sm">Очистить</button>
+      <Link href="/shortlist" className="btn btn-primary btn-sm">
+        Сравнить →
+      </Link>
+    </div>
+  );
+}

@@ -1,0 +1,70 @@
+import Link from "next/link";
+import Catalog from "@/components/Catalog";
+import { supabaseServer } from "@/lib/supabase/server";
+import type { Profession, Specialist } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const sb = await supabaseServer();
+  // Для каталога берём только поля, нужные карточкам (без тяжёлого «about») — легче при 1500+ анкетах.
+  const [{ data: professions }, { data: specialists }] = await Promise.all([
+    sb.from("professions").select("*").order("sort_order"),
+    sb
+      .from("specialists")
+      .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified")
+      .eq("published", true)
+      .order("rating", { ascending: false }),
+  ]);
+
+  return (
+    <>
+      {/* Hero */}
+      <section style={{ position: "relative", overflow: "hidden", background: "linear-gradient(180deg, #f4ebda 0%, var(--bg) 78%)", borderBottom: "1px solid var(--border)" }}>
+        {/* декоративные свечения */}
+        <div aria-hidden style={{ position: "absolute", top: -120, left: "12%", width: 340, height: 340, borderRadius: "50%", background: "radial-gradient(circle, rgba(147,51,234,.22), transparent 68%)", filter: "blur(20px)" }} />
+        <div aria-hidden style={{ position: "absolute", top: -60, right: "8%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(194,155,69,.32), transparent 68%)", filter: "blur(18px)" }} />
+
+        <div className="container" style={{ position: "relative", padding: "64px 22px 52px", textAlign: "center" }}>
+          <span className="badge badge-soft" style={{ marginBottom: 18, padding: "7px 16px", fontSize: "0.82rem" }}>
+            ✦ Kömek — нужный специалист под любой случай
+          </span>
+          <h1 className="h1" style={{ maxWidth: 860, margin: "0 auto 18px" }}>
+            Найдите специалиста для <span className="gradient-text">тоя, праздника</span> и дома
+          </h1>
+          <p className="lead" style={{ maxWidth: 600, margin: "0 auto 28px" }}>
+            Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители —
+            для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href="#catalog" className="btn btn-primary">
+              Смотреть каталог
+            </a>
+            <Link href="/register?role=specialist" className="btn btn-outline">
+              Я специалист — разместить анкету
+            </Link>
+          </div>
+
+          {/* мини-доверие */}
+          <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
+            <span>🎯 20+ специальностей</span>
+            <span>⭐ Отзывы от реальных клиентов</span>
+            <span>🔒 Контакты — после подтверждения</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Каталог */}
+      <section id="catalog" className="container" style={{ padding: "40px 22px 0" }}>
+        <div style={{ marginBottom: 22 }}>
+          <h2 className="h2" style={{ marginBottom: 4 }}>Каталог специалистов</h2>
+          <p className="soft">Выберите раздел, специальность или просто напишите, что нужно.</p>
+        </div>
+        <Catalog
+          professions={(professions as Profession[]) ?? []}
+          specialists={(specialists as unknown as Specialist[]) ?? []}
+        />
+      </section>
+    </>
+  );
+}
