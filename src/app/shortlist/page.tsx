@@ -4,11 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useShortlist } from "@/lib/shortlist";
+import { useLang } from "@/lib/lang";
+import { priceLabelL, profName } from "@/lib/i18n";
 import Stars from "@/components/Stars";
-import { priceLabel, type Profession, type Specialist } from "@/lib/types";
+import type { Profession, Specialist } from "@/lib/types";
 
 export default function ShortlistPage() {
   const sb = supabaseBrowser();
+  const { lang, t } = useLang();
   const { ids, ready, remove, clear } = useShortlist();
   const [specialists, setSpecialists] = useState<Specialist[]>([]);
   const [profMap, setProfMap] = useState<Record<string, Profession>>({});
@@ -53,11 +56,11 @@ export default function ShortlistPage() {
     return (
       <div className="container-narrow" style={{ padding: "48px 22px", textAlign: "center" }}>
         <div style={{ fontSize: 44, marginBottom: 8 }}>❤️</div>
-        <h1 className="h2" style={{ marginBottom: 8 }}>Избранное пусто</h1>
+        <h1 className="h2" style={{ marginBottom: 8 }}>{t("Избранное пусто")}</h1>
         <p className="soft" style={{ marginBottom: 18 }}>
-          Добавляйте специалистов кнопкой ❤ в каталоге — здесь их можно сравнить бок о бок и выбрать лучшего.
+          {t("Добавляйте специалистов кнопкой ❤ в каталоге — здесь их можно сравнить бок о бок и выбрать лучшего.")}
         </p>
-        <Link href="/" className="btn btn-primary">В каталог</Link>
+        <Link href="/" className="btn btn-primary">{t("В каталог")}</Link>
       </div>
     );
   }
@@ -73,10 +76,10 @@ export default function ShortlistPage() {
   return (
     <div className="container" style={{ padding: "28px 22px 0" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
-        <h1 className="h2" style={{ margin: 0 }}>Избранное и сравнение</h1>
-        <button onClick={clear} className="btn btn-ghost btn-sm">Очистить всё</button>
+        <h1 className="h2" style={{ margin: 0 }}>{t("Избранное и сравнение")}</h1>
+        <button onClick={clear} className="btn btn-ghost btn-sm">{t("Очистить всё")}</button>
       </div>
-      <p className="soft" style={{ marginBottom: 20 }}>Сравните выбранных специалистов и выберите лучшего.</p>
+      <p className="soft" style={{ marginBottom: 20 }}>{t("Сравните выбранных специалистов и выберите лучшего.")}</p>
 
       <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--surface)" }}>
         <div style={{ display: "grid", gridTemplateColumns: gridCols, minWidth: "fit-content" }}>
@@ -85,7 +88,7 @@ export default function ShortlistPage() {
           {specialists.map((s, i) => (
             <div key={s.id} style={{ padding: "16px 14px", textAlign: "center", background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
               <div style={{ position: "relative" }}>
-                <button onClick={() => remove(s.id)} title="Убрать" style={{ position: "absolute", top: -6, right: 4, border: "none", background: "var(--surface-2)", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", color: "var(--text-mute)" }}>×</button>
+                <button onClick={() => remove(s.id)} title={t("Убрать")} style={{ position: "absolute", top: -6, right: 4, border: "none", background: "var(--surface-2)", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", color: "var(--text-mute)" }}>×</button>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={s.avatar_url} alt={s.name} className="avatar" style={{ width: 64, height: 64, margin: "0 auto 8px" }} />
               </div>
@@ -94,17 +97,17 @@ export default function ShortlistPage() {
           ))}
 
           {/* Строки-характеристики */}
-          {row("Специальность", specialists, (s) => <span className="badge badge-soft">{profMap[s.profession]?.emoji} {profMap[s.profession]?.label ?? s.profession}</span>, label, cell)}
-          {row("Рейтинг", specialists, (s) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Stars rating={s.rating} />{s.review_count > 0 && <span className="muted" style={{ fontSize: "0.78rem" }}>({s.review_count})</span>}</span>, label, cell)}
-          {row("Цена", specialists, (s) => <strong style={{ color: "var(--brand)" }}>{priceLabel(s.price_from)}</strong>, label, cell)}
-          {row("Опыт", specialists, (s) => <span>{s.experience_years} лет</span>, label, cell)}
-          {row("Город", specialists, (s) => <span>📍 {s.city}</span>, label, cell)}
-          {row("Видео-визитка", specialists, (s) => (s.video_url ? <span style={{ color: "var(--good)" }}>▶ есть</span> : <span className="muted">—</span>), label, cell)}
-          {row("Занятость", specialists, (s) => (busyCount[s.id] ? <span style={{ color: "var(--bad)" }}>{busyCount[s.id]} занятых дат</span> : <span style={{ color: "var(--good)" }}>свободен</span>), label, cell)}
-          {row("Особенности", specialists, (s) => (
+          {row(t("Специальность"), specialists, (s) => <span className="badge badge-soft">{profMap[s.profession]?.emoji} {profName(profMap[s.profession], lang) || s.profession}</span>, label, cell)}
+          {row(t("Рейтинг"), specialists, (s) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Stars rating={s.rating} />{s.review_count > 0 && <span className="muted" style={{ fontSize: "0.78rem" }}>({s.review_count})</span>}</span>, label, cell)}
+          {row(t("Цена"), specialists, (s) => <strong style={{ color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>, label, cell)}
+          {row(t("Опыт"), specialists, (s) => <span>{s.experience_years} {t("лет")}</span>, label, cell)}
+          {row(t("Город"), specialists, (s) => <span>📍 {s.city}</span>, label, cell)}
+          {row(t("Видео-визитка"), specialists, (s) => (s.video_url ? <span style={{ color: "var(--good)" }}>▶ {t("есть")}</span> : <span className="muted">—</span>), label, cell)}
+          {row(t("Занятость"), specialists, (s) => (busyCount[s.id] ? <span style={{ color: "var(--bad)" }}>{busyCount[s.id]} {t("занятых дат")}</span> : <span style={{ color: "var(--good)" }}>{t("свободен")}</span>), label, cell)}
+          {row(t("Особенности"), specialists, (s) => (
             <span style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-              {s.tags.slice(0, 4).map((t) => (
-                <span key={t} style={{ fontSize: "0.72rem", color: "var(--text-mute)", background: "var(--surface-2)", padding: "2px 8px", borderRadius: 999 }}>#{t}</span>
+              {s.tags.slice(0, 4).map((tg) => (
+                <span key={tg} style={{ fontSize: "0.72rem", color: "var(--text-mute)", background: "var(--surface-2)", padding: "2px 8px", borderRadius: 999 }}>#{tg}</span>
               ))}
             </span>
           ), label, cell)}
@@ -113,14 +116,14 @@ export default function ShortlistPage() {
           {label("")}
           {specialists.map((s) => (
             <div key={s.id} style={{ padding: "14px", background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-              <Link href={`/s/${s.id}`} className="btn btn-primary btn-sm btn-block">Открыть и запросить</Link>
+              <Link href={`/s/${s.id}`} className="btn btn-primary btn-sm btn-block">{t("Открыть и запросить")}</Link>
             </div>
           ))}
         </div>
       </div>
 
       <div style={{ marginTop: 20 }}>
-        <Link href="/" className="link">← Добавить ещё из каталога</Link>
+        <Link href="/" className="link">{t("← Добавить ещё из каталога")}</Link>
       </div>
     </div>
   );

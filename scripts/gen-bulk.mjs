@@ -2,7 +2,7 @@
 import { randomUUID } from "crypto";
 import { writeFileSync } from "fs";
 
-const N = 1500;
+const N = 600;
 const R = (n) => Math.floor(Math.random() * n);
 const pick = (a) => a[R(a.length)];
 const chance = (p) => Math.random() < p;

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import SpecialistCard from "@/components/SpecialistCard";
+import { useLang } from "@/lib/lang";
+import { profName } from "@/lib/i18n";
 import { type Profession, type Segment, type Specialist } from "@/lib/types";
 
 type SegFilter = Segment | "all";
@@ -13,6 +15,7 @@ export default function Catalog({
   professions: Profession[];
   specialists: Specialist[];
 }) {
+  const { lang, t } = useLang();
   const [seg, setSeg] = useState<SegFilter>("all");
   const [prof, setProf] = useState<string | null>(null);
   const [city, setCity] = useState<string>("");
@@ -73,7 +76,7 @@ export default function Catalog({
       if (city && s.city !== city) return false;
       if (minRating && s.rating < minRating) return false;
       if (needle) {
-        const hay = `${s.name} ${s.tagline} ${p?.label ?? ""} ${(s.tags ?? []).join(" ")}`.toLowerCase();
+        const hay = `${s.name} ${s.tagline} ${p?.label ?? ""} ${p?.label_kk ?? ""} ${(s.tags ?? []).join(" ")}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
@@ -92,9 +95,9 @@ export default function Catalog({
   useEffect(() => { setLimit(PAGE); }, [seg, prof, city, q, minRating, sort]);
 
   const segTabs: { key: SegFilter; label: string; emoji: string }[] = [
-    { key: "all", label: "Все", emoji: "✦" },
-    { key: "toi", label: "Для тоя", emoji: "🎉" },
-    { key: "general", label: "Бытовые", emoji: "🏠" },
+    { key: "all", label: t("Все"), emoji: "✦" },
+    { key: "toi", label: t("Для тоя"), emoji: "🎉" },
+    { key: "general", label: t("Бытовые"), emoji: "🏠" },
   ];
 
   return (
@@ -121,11 +124,11 @@ export default function Catalog({
       {/* Фильтр по профессии — переносится по строкам, без горизонтальной прокрутки */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         <button className={`chip ${!prof ? "chip-active" : ""}`} onClick={() => setProf(null)}>
-          Все специальности
+          {t("Все специальности")}
         </button>
         {visibleProfs.map((p) => (
           <button key={p.id} className={`chip ${prof === p.id ? "chip-active" : ""}`} onClick={() => setProf(p.id)}>
-            {p.emoji} {p.label}
+            {p.emoji} {profName(p, lang)}
           </button>
         ))}
       </div>
@@ -135,7 +138,7 @@ export default function Catalog({
         <div style={{ position: "relative", flex: "1 1 280px" }}>
           <input
             className="input"
-            placeholder="Что нужно? Например: тамада на казахском, фотограф с дроном…"
+            placeholder={t("Что нужно? Например: тамада на казахском, фотограф с дроном…")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -184,7 +187,7 @@ export default function Catalog({
           )}
         </div>
         <select className="select" value={city} onChange={(e) => setCity(e.target.value)} style={{ flex: "0 1 170px" }}>
-          <option value="">Все города</option>
+          <option value="">{t("Все города")}</option>
           {cities.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -192,26 +195,26 @@ export default function Catalog({
           ))}
         </select>
         <select className="select" value={minRating} onChange={(e) => setMinRating(Number(e.target.value))} style={{ flex: "0 1 150px" }}>
-          <option value={0}>Любой рейтинг</option>
-          <option value={4}>★ 4.0 и выше</option>
-          <option value={4.5}>★ 4.5 и выше</option>
-          <option value={4.8}>★ 4.8 и выше</option>
+          <option value={0}>{t("Любой рейтинг")}</option>
+          <option value={4}>{t("★ 4.0 и выше")}</option>
+          <option value={4.5}>{t("★ 4.5 и выше")}</option>
+          <option value={4.8}>{t("★ 4.8 и выше")}</option>
         </select>
         <select className="select" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} style={{ flex: "0 1 190px" }}>
-          <option value="pop">Популярные</option>
-          <option value="new">Новые</option>
-          <option value="cheap">Сначала дешевле</option>
-          <option value="exp">Сначала дороже</option>
+          <option value="pop">{t("Популярные")}</option>
+          <option value="new">{t("Новые")}</option>
+          <option value="cheap">{t("Сначала дешевле")}</option>
+          <option value="exp">{t("Сначала дороже")}</option>
         </select>
       </div>
 
       <div className="muted" style={{ fontSize: "0.9rem", marginBottom: 14 }}>
-        Найдено: {filtered.length}
+        {t("Найдено:")} {filtered.length}
       </div>
 
       {filtered.length === 0 ? (
         <div className="card card-pad" style={{ textAlign: "center", color: "var(--text-mute)" }}>
-          Ничего не найдено. Попробуйте изменить фильтры.
+          {t("Ничего не найдено. Попробуйте изменить фильтры.")}
         </div>
       ) : (
         <>
@@ -223,7 +226,7 @@ export default function Catalog({
           {filtered.length > limit && (
             <div style={{ textAlign: "center", marginTop: 28 }}>
               <button className="btn btn-outline" onClick={() => setLimit((l) => l + PAGE)}>
-                Показать ещё ({filtered.length - limit})
+                {t("Показать ещё")} ({filtered.length - limit})
               </button>
             </div>
           )}

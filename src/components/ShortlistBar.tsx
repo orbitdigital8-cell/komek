@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useShortlist } from "@/lib/shortlist";
+import { useLang } from "@/lib/lang";
 
 export default function ShortlistBar() {
   const { ids, ready, clear } = useShortlist();
+  const { t } = useLang();
   const pathname = usePathname();
 
   // Не показываем на самой странице избранного и пока пусто
@@ -30,11 +32,11 @@ export default function ShortlistBar() {
       }}
     >
       <span style={{ fontWeight: 650, fontSize: "0.92rem" }}>
-        ❤️ В избранном: {ids.length}
+        {t("❤️ В избранном:")} {ids.length}
       </span>
-      <button onClick={clear} className="btn btn-ghost btn-sm">Очистить</button>
+      <button onClick={clear} className="btn btn-ghost btn-sm">{t("Очистить")}</button>
       <Link href="/shortlist" className="btn btn-primary btn-sm">
-        Сравнить →
+        {t("Сравнить →")}
       </Link>
     </div>
   );

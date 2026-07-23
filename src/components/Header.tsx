@@ -5,17 +5,37 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useShortlist } from "@/lib/shortlist";
 import { useNotifications } from "@/lib/useNotifications";
+import { useLang } from "@/lib/lang";
 
 export default function Header() {
   const { user, role, name, loading, signOut } = useAuth();
   const { ids, ready } = useShortlist();
   const { total } = useNotifications();
+  const { lang, setLang, t } = useLang();
   const router = useRouter();
 
   async function handleSignOut() {
     await signOut();
     router.push("/");
   }
+
+  const langBtn = (l: "ru" | "kk", label: string) => (
+    <button
+      onClick={() => setLang(l)}
+      style={{
+        padding: "3px 8px",
+        borderRadius: 7,
+        border: "none",
+        cursor: "pointer",
+        fontSize: "0.78rem",
+        fontWeight: 700,
+        background: lang === l ? "var(--brand)" : "transparent",
+        color: lang === l ? "#fff" : "var(--text-mute)",
+      }}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <header
@@ -53,6 +73,12 @@ export default function Header() {
           </span>
         </Link>
 
+        {/* Переключатель языка */}
+        <span style={{ display: "inline-flex", gap: 2, padding: 2, background: "var(--surface-2)", borderRadius: 9 }}>
+          {langBtn("ru", "RU")}
+          {langBtn("kk", "ҚЗ")}
+        </span>
+
         <nav style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
           {ready && ids.length > 0 && (
             <Link href="/shortlist" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -63,36 +89,36 @@ export default function Header() {
           {loading ? null : !user ? (
             <>
               <Link href="/login" className="btn btn-ghost btn-sm">
-                Войти
+                {t("Войти")}
               </Link>
               <Link href="/register?role=specialist" className="btn btn-primary btn-sm">
-                <span className="cta-full">Разместить анкету</span>
-                <span className="cta-short">Анкета</span>
+                <span className="cta-full">{t("Разместить анкету")}</span>
+                <span className="cta-short">{t("Анкета")}</span>
               </Link>
             </>
           ) : (
             <>
               {role === "specialist" && (
                 <Link href="/dashboard" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  Моя анкета
+                  {t("Моя анкета")}
                   {total > 0 && <span className="pill-count">{total}</span>}
                 </Link>
               )}
               {role === "client" && (
                 <Link href="/requests" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  Мои запросы
+                  {t("Мои запросы")}
                   {total > 0 && <span className="pill-count">{total}</span>}
                 </Link>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 8 }}>
                 <span
                   className="badge badge-soft"
-                  title={role === "specialist" ? "Специалист" : role === "admin" ? "Админ" : "Заказчик"}
+                  title={role === "specialist" ? t("Специалист") : role === "admin" ? t("Админ") : t("Заказчик")}
                 >
-                  {name || (role === "specialist" ? "Специалист" : "Заказчик")}
+                  {name || (role === "specialist" ? t("Специалист") : t("Заказчик"))}
                 </span>
                 <button onClick={handleSignOut} className="btn btn-outline btn-sm">
-                  Выйти
+                  {t("Выйти")}
                 </button>
               </div>
             </>

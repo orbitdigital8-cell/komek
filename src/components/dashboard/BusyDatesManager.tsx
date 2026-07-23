@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { useLang } from "@/lib/lang";
 import { formatDate, type BusyDate } from "@/lib/types";
 
 export default function BusyDatesManager({ specialistId }: { specialistId: string }) {
   const sb = supabaseBrowser();
+  const { t } = useLang();
   const [rows, setRows] = useState<BusyDate[]>([]);
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");
@@ -48,27 +50,27 @@ export default function BusyDatesManager({ specialistId }: { specialistId: strin
   return (
     <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }} className="editor-grid">
       <div className="card card-pad">
-        <h3 className="h2" style={{ fontSize: "1.1rem", marginTop: 0 }}>Отметить занятый день</h3>
-        <p className="soft" style={{ fontSize: "0.85rem" }}>Заказчик увидит эти даты и поймёт, свободны ли вы на нужный день.</p>
+        <h3 className="h2" style={{ fontSize: "1.1rem", marginTop: 0 }}>{t("Отметить занятый день")}</h3>
+        <p className="soft" style={{ fontSize: "0.85rem" }}>{t("Заказчик увидит эти даты и поймёт, свободны ли вы на нужный день.")}</p>
         <form onSubmit={add} style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
           <div className="field">
-            <label className="label">Дата</label>
+            <label className="label">{t("Дата")}</label>
             <input className="input" type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
           <div className="field">
-            <label className="label">Заметка (необязательно)</label>
-            <input className="input" placeholder="той / свадьба / выезд" value={note} onChange={(e) => setNote(e.target.value)} />
+            <label className="label">{t("Заметка (необязательно)")}</label>
+            <input className="input" placeholder={t("той / свадьба / выезд")} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
-          <button className="btn btn-primary" disabled={busy || !date}>Добавить дату</button>
+          <button className="btn btn-primary" disabled={busy || !date}>{t("Добавить дату")}</button>
         </form>
       </div>
 
       <div className="card card-pad">
-        <h3 className="h2" style={{ fontSize: "1.1rem", marginTop: 0 }}>Занятые даты</h3>
+        <h3 className="h2" style={{ fontSize: "1.1rem", marginTop: 0 }}>{t("Занятые даты")}</h3>
         {!ready ? (
-          <div className="muted">Загрузка…</div>
+          <div className="muted">{t("Загрузка…")}</div>
         ) : rows.length === 0 ? (
-          <div className="muted">Пока нет занятых дат — вы свободны.</div>
+          <div className="muted">{t("Пока нет занятых дат — вы свободны.")}</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
             {rows.map((r) => (
@@ -77,7 +79,7 @@ export default function BusyDatesManager({ specialistId }: { specialistId: strin
                   <strong>{formatDate(r.busy_date, true)}</strong>
                   {r.note && <span className="muted" style={{ marginLeft: 8, fontSize: "0.85rem" }}>· {r.note}</span>}
                 </span>
-                <button onClick={() => remove(r.busy_date)} className="btn btn-ghost btn-sm" style={{ padding: "3px 9px" }}>Убрать</button>
+                <button onClick={() => remove(r.busy_date)} className="btn btn-ghost btn-sm" style={{ padding: "3px 9px" }}>{t("Убрать")}</button>
               </div>
             ))}
           </div>

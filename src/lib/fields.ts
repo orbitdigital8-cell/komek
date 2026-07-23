@@ -44,10 +44,10 @@ export function fieldsFor(profession: string): FieldDef[] {
   return PROFESSION_FIELDS[profession] ?? [];
 }
 
-// Человекочитаемое значение атрибута для показа в анкете
-export function formatAttr(f: FieldDef, value: unknown): string | null {
+// Человекочитаемое значение атрибута для показа в анкете (t — переводчик, опционально)
+export function formatAttr(f: FieldDef, value: unknown, t: (s: string) => string = (s) => s): string | null {
   if (value === undefined || value === null || value === "") return null;
-  if (f.type === "bool") return value ? "да" : null; // false/пусто не показываем
-  if (f.type === "number") return `${value}${f.suffix ? " " + f.suffix : ""}`;
+  if (f.type === "bool") return value ? t("да") : null; // false/пусто не показываем
+  if (f.type === "number") return `${value}${f.suffix ? " " + t(f.suffix) : ""}`;
   return String(value);
 }

@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import Catalog from "@/components/Catalog";
 import { supabaseServer } from "@/lib/supabase/server";
+import { makeT, type Lang } from "@/lib/i18n";
 import type { Profession, Specialist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const lang: Lang = (await cookies()).get("lang")?.value === "kk" ? "kk" : "ru";
+  const t = makeT(lang);
   const sb = await supabaseServer();
   // Для каталога берём только поля, нужные карточкам (без тяжёлого «about») — легче при 1500+ анкетах.
   const [{ data: professions }, { data: specialists }] = await Promise.all([
@@ -27,29 +31,36 @@ export default async function HomePage() {
 
         <div className="container" style={{ position: "relative", padding: "64px 22px 52px", textAlign: "center" }}>
           <span className="badge badge-soft" style={{ marginBottom: 18, padding: "7px 16px", fontSize: "0.82rem" }}>
-            ✦ Kömek — нужный специалист под любой случай
+            ✦ {t("Kömek — нужный специалист под любой случай")}
           </span>
           <h1 className="h1" style={{ maxWidth: 860, margin: "0 auto 18px" }}>
-            Найдите специалиста для <span className="gradient-text">тоя, праздника</span> и дома
+            {lang === "kk" ? (
+              <>
+                <span className="gradient-text">Тойға, мерекеге</span> және үйге маман табыңыз
+              </>
+            ) : (
+              <>
+                Найдите специалиста для <span className="gradient-text">тоя, праздника</span> и дома
+              </>
+            )}
           </h1>
           <p className="lead" style={{ maxWidth: 600, margin: "0 auto 28px" }}>
-            Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители —
-            для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.
+            {t("Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители — для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.")}
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="#catalog" className="btn btn-primary">
-              Смотреть каталог
+              {t("Смотреть каталог")}
             </a>
             <Link href="/register?role=specialist" className="btn btn-outline">
-              Я специалист — разместить анкету
+              {t("Я специалист — разместить анкету")}
             </Link>
           </div>
 
           {/* мини-доверие */}
           <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
-            <span>🎯 20+ специальностей</span>
-            <span>⭐ Отзывы от реальных клиентов</span>
-            <span>🔒 Контакты — после подтверждения</span>
+            <span>🎯 {t("20+ специальностей")}</span>
+            <span>⭐ {t("Отзывы от реальных клиентов")}</span>
+            <span>🔒 {t("Контакты — после подтверждения")}</span>
           </div>
         </div>
       </section>
@@ -57,8 +68,8 @@ export default async function HomePage() {
       {/* Каталог */}
       <section id="catalog" className="container" style={{ padding: "40px 22px 0" }}>
         <div style={{ marginBottom: 22 }}>
-          <h2 className="h2" style={{ marginBottom: 4 }}>Каталог специалистов</h2>
-          <p className="soft">Выберите раздел, специальность или просто напишите, что нужно.</p>
+          <h2 className="h2" style={{ marginBottom: 4 }}>{t("Каталог специалистов")}</h2>
+          <p className="soft">{t("Выберите раздел, специальность или просто напишите, что нужно.")}</p>
         </div>
         <Catalog
           professions={(professions as Profession[]) ?? []}

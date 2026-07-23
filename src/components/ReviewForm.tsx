@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useLang } from "@/lib/lang";
 import type { Review } from "@/lib/types";
 
 export default function ReviewForm({ specialistId, defaultName }: { specialistId: string; defaultName: string }) {
   const sb = supabaseBrowser();
   const { user, name } = useAuth();
+  const { t } = useLang();
   const [existing, setExisting] = useState<Review | null>(null);
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(5);
@@ -39,9 +41,9 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
   if (done || existing) {
     return (
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-        <span className="badge badge-accepted">✓ Ваш отзыв: {"★".repeat(existing?.rating ?? rating)}</span>
+        <span className="badge badge-accepted">✓ {t("Ваш отзыв:")} {"★".repeat(existing?.rating ?? rating)}</span>
         <button className="btn btn-ghost btn-sm" style={{ marginLeft: 8 }} onClick={() => { setDone(false); setExisting(null); setOpen(true); }}>
-          Изменить
+          {t("Изменить")}
         </button>
       </div>
     );
@@ -50,7 +52,7 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
   if (!open) {
     return (
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-        <button className="btn btn-outline btn-sm" onClick={() => setOpen(true)}>⭐ Оставить отзыв</button>
+        <button className="btn btn-outline btn-sm" onClick={() => setOpen(true)}>{t("⭐ Оставить отзыв")}</button>
       </div>
     );
   }
@@ -70,10 +72,10 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
           </span>
         ))}
       </div>
-      <textarea className="textarea" placeholder="Как прошло? Что понравилось?" value={text} onChange={(e) => setText(e.target.value)} style={{ minHeight: 72 }} />
+      <textarea className="textarea" placeholder={t("Как прошло? Что понравилось?")} value={text} onChange={(e) => setText(e.target.value)} style={{ minHeight: 72 }} />
       <div style={{ display: "flex", gap: 8 }}>
-        <button className="btn btn-primary btn-sm" disabled={busy} onClick={submit}>{busy ? "Отправляем…" : "Опубликовать отзыв"}</button>
-        <button className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>Отмена</button>
+        <button className="btn btn-primary btn-sm" disabled={busy} onClick={submit}>{busy ? t("Отправляем…") : t("Опубликовать отзыв")}</button>
+        <button className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>{t("Отмена")}</button>
       </div>
     </div>
   );

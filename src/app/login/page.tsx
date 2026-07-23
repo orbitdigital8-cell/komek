@@ -4,9 +4,11 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { useLang } from "@/lib/lang";
 
 function LoginForm() {
   const { signIn } = useAuth();
+  const { t } = useLang();
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/";
@@ -23,7 +25,7 @@ function LoginForm() {
     const error = await signIn(email, password);
     setBusy(false);
     if (error) {
-      setErr("Неверный email или пароль");
+      setErr(t("Неверный email или пароль"));
       return;
     }
     router.push(next);
@@ -33,24 +35,24 @@ function LoginForm() {
   return (
     <div className="container-narrow" style={{ padding: "48px 20px" }}>
       <div className="card card-pad" style={{ maxWidth: 420, margin: "0 auto" }}>
-        <h1 className="h2" style={{ marginBottom: 4 }}>Вход</h1>
-        <p className="soft" style={{ marginBottom: 20 }}>Рады видеть снова 👋</p>
+        <h1 className="h2" style={{ marginBottom: 4 }}>{t("Вход")}</h1>
+        <p className="soft" style={{ marginBottom: 20 }}>{t("Рады видеть снова 👋")}</p>
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="field">
             <label className="label">Email</label>
             <input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
-            <label className="label">Пароль</label>
+            <label className="label">{t("Пароль")}</label>
             <input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {err && <div className="badge badge-declined">{err}</div>}
           <button className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Входим…" : "Войти"}
+            {busy ? t("Входим…") : t("Войти")}
           </button>
         </form>
         <p className="soft" style={{ marginTop: 16, fontSize: "0.9rem", textAlign: "center" }}>
-          Нет аккаунта? <Link href={`/register?next=${encodeURIComponent(next)}`} className="link">Зарегистрироваться</Link>
+          {t("Нет аккаунта?")} <Link href={`/register?next=${encodeURIComponent(next)}`} className="link">{t("Зарегистрироваться")}</Link>
         </p>
       </div>
     </div>

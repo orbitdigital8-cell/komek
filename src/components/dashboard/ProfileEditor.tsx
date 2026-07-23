@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import BrandIcon from "@/components/BrandIcon";
 import { fieldsFor } from "@/lib/fields";
+import { useLang } from "@/lib/lang";
+import { profName } from "@/lib/i18n";
 import { SOCIAL_META, SOCIAL_ORDER, type Profession, type Social, type Specialist, type SpecialistContacts } from "@/lib/types";
 
 type AttrVal = string | number | boolean;
@@ -23,6 +25,7 @@ type SocialDraft = { type: string; value: string; is_public: boolean };
 
 export default function ProfileEditor({ userId, professions, specialist, contacts, socials, onSaved, adminSpecialistId }: Props) {
   const sb = supabaseBrowser();
+  const { lang, t } = useLang();
 
   const [f, setF] = useState({
     profession: specialist?.profession ?? professions[0]?.id ?? "",
@@ -190,44 +193,44 @@ export default function ProfileEditor({ userId, professions, specialist, contact
     <form onSubmit={save} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }} className="editor-grid">
       {/* Основное */}
       <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>Основное</h3>
+        <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Основное")}</h3>
 
         <div className="field">
-          <label className="label">Профессия</label>
+          <label className="label">{t("Профессия")}</label>
           <select className="select" value={f.profession} onChange={(e) => setF({ ...f, profession: e.target.value })}>
             {professions.map((p) => (
-              <option key={p.id} value={p.id}>{p.emoji} {p.label}</option>
+              <option key={p.id} value={p.id}>{p.emoji} {profName(p, lang)}</option>
             ))}
           </select>
         </div>
         <div className="field">
-          <label className="label">Имя / название</label>
+          <label className="label">{t("Имя / название")}</label>
           <input className="input" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div className="field">
-            <label className="label">Город</label>
+            <label className="label">{t("Город")}</label>
             <input className="input" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
           </div>
           <div className="field">
-            <label className="label">Опыт (лет)</label>
+            <label className="label">{t("Опыт (лет)")}</label>
             <input className="input" type="number" min={0} value={f.experience_years} onChange={(e) => setF({ ...f, experience_years: e.target.value })} />
           </div>
         </div>
         <div className="field">
-          <label className="label">Цена от (₸) — пусто = договорная</label>
+          <label className="label">{t("Цена от (₸) — пусто = договорная")}</label>
           <input className="input" type="number" min={0} value={f.price_from} onChange={(e) => setF({ ...f, price_from: e.target.value })} />
         </div>
         <div className="field">
-          <label className="label">Короткое описание</label>
-          <input className="input" maxLength={120} placeholder="Например: Тамада на двух языках" value={f.tagline} onChange={(e) => setF({ ...f, tagline: e.target.value })} />
+          <label className="label">{t("Короткое описание")}</label>
+          <input className="input" maxLength={120} value={f.tagline} onChange={(e) => setF({ ...f, tagline: e.target.value })} />
         </div>
         <div className="field">
-          <label className="label">Подробно о себе</label>
+          <label className="label">{t("Подробно о себе")}</label>
           <textarea className="textarea" value={f.about} onChange={(e) => setF({ ...f, about: e.target.value })} />
         </div>
         <div className="field">
-          <label className="label">Теги (по ним вас найдут в фильтре)</label>
+          <label className="label">{t("Теги (по ним вас найдут в фильтре)")}</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
             {tags.map((t) => (
               <span key={t} className="chip" style={{ cursor: "default", fontSize: "0.82rem" }}>
@@ -239,7 +242,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
           <div style={{ display: "flex", gap: 8 }}>
             <input
               className="input"
-              placeholder="Например: на казахском"
+              placeholder={t("Например: на казахском")}
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => {
@@ -256,25 +259,25 @@ export default function ProfileEditor({ userId, professions, specialist, contact
               className="btn btn-outline btn-sm"
               onClick={() => { const v = tagInput.trim(); if (v && !tags.includes(v)) setTags((g) => [...g, v]); setTagInput(""); }}
             >
-              Добавить
+              {t("Добавить")}
             </button>
           </div>
         </div>
 
         {attrFields.length > 0 && (
           <div className="field">
-            <label className="label">Детали ({professions.find((p) => p.id === f.profession)?.label})</label>
+            <label className="label">{t("Детали")} ({profName(professions.find((p) => p.id === f.profession), lang)})</label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {attrFields.map((fld) => (
                 <div key={fld.key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {fld.type === "bool" ? (
                     <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "8px 0" }}>
                       <input type="checkbox" checked={!!attrs[fld.key]} onChange={(e) => setAttrs((a) => ({ ...a, [fld.key]: e.target.checked }))} />
-                      <span className="soft">{fld.label}</span>
+                      <span className="soft">{t(fld.label)}</span>
                     </label>
                   ) : fld.type === "select" ? (
                     <>
-                      <span className="label" style={{ fontSize: "0.8rem" }}>{fld.label}</span>
+                      <span className="label" style={{ fontSize: "0.8rem" }}>{t(fld.label)}</span>
                       <select className="select" value={String(attrs[fld.key] ?? "")} onChange={(e) => setAttrs((a) => ({ ...a, [fld.key]: e.target.value }))}>
                         <option value="">—</option>
                         {fld.options?.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -282,7 +285,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
                     </>
                   ) : (
                     <>
-                      <span className="label" style={{ fontSize: "0.8rem" }}>{fld.label}</span>
+                      <span className="label" style={{ fontSize: "0.8rem" }}>{t(fld.label)}</span>
                       <input
                         className="input"
                         type={fld.type === "number" ? "number" : "text"}
@@ -300,30 +303,30 @@ export default function ProfileEditor({ userId, professions, specialist, contact
 
         <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <input type="checkbox" checked={f.published} onChange={(e) => setF({ ...f, published: e.target.checked })} />
-          <span className="soft">Показывать анкету в каталоге</span>
+          <span className="soft">{t("Показывать анкету в каталоге")}</span>
         </label>
       </div>
 
       {/* Медиа + контакты */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>Фото и видео</h3>
+          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Фото и видео")}</h3>
 
           {/* Аватар */}
           <div className="field">
-            <label className="label">Главное фото</label>
+            <label className="label">{t("Главное фото")}</label>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={f.avatar_url || "https://picsum.photos/seed/placeholder/200"} alt="" className="avatar" style={{ width: 60, height: 60 }} />
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => avatarInput.current?.click()}>Загрузить</button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => avatarInput.current?.click()}>{t("Загрузить")}</button>
               <input ref={avatarInput} type="file" accept="image/*" hidden onChange={onAvatarPick} />
             </div>
           </div>
 
           {/* Галерея с перемещением фото */}
           <div className="field">
-            <label className="label">Галерея работ</label>
-            <p className="muted" style={{ fontSize: "0.78rem", margin: "0 0 8px" }}>Первое фото — обложка в каталоге. Меняйте порядок стрелками.</p>
+            <label className="label">{t("Галерея работ")}</label>
+            <p className="muted" style={{ fontSize: "0.78rem", margin: "0 0 8px" }}>{t("Первое фото — обложка в каталоге. Меняйте порядок стрелками.")}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
               {gallery.map((url, i) => (
                 <div key={url + i} style={{ width: 96, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -331,7 +334,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     {i === 0 && (
-                      <span style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "var(--brand)", color: "#fff", fontSize: 9, fontWeight: 700, textAlign: "center", padding: "1px 0" }}>ОБЛОЖКА</span>
+                      <span style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "var(--brand)", color: "#fff", fontSize: 9, fontWeight: 700, textAlign: "center", padding: "1px 0" }}>{t("ОБЛОЖКА")}</span>
                     )}
                     <button type="button" onClick={() => setGallery((g) => g.filter((_, j) => j !== i))}
                       style={{ position: "absolute", top: 3, right: 3, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: 11, lineHeight: 1 }}>×</button>
@@ -345,36 +348,36 @@ export default function ProfileEditor({ userId, professions, specialist, contact
                 </div>
               ))}
             </div>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => galleryInput.current?.click()}>+ Добавить фото</button>
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => galleryInput.current?.click()}>{t("+ Добавить фото")}</button>
             <input ref={galleryInput} type="file" accept="image/*" multiple hidden onChange={onGalleryPick} />
           </div>
 
           {/* Видео-визитка: загрузка файлом или ссылка */}
           <div className="field">
-            <label className="label">Видео-визитка</label>
+            <label className="label">{t("Видео-визитка")}</label>
             {f.video_url ? (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span className="badge badge-accepted">✓ Видео добавлено</span>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setF({ ...f, video_url: "" })}>Убрать</button>
+                <span className="badge badge-accepted">{t("✓ Видео добавлено")}</span>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setF({ ...f, video_url: "" })}>{t("Убрать")}</button>
               </div>
             ) : (
-              <p className="muted" style={{ fontSize: "0.78rem", margin: "0 0 8px" }}>Пока не добавлено. Загрузите файл или вставьте ссылку.</p>
+              <p className="muted" style={{ fontSize: "0.78rem", margin: "0 0 8px" }}>{t("Пока не добавлено. Загрузите файл или вставьте ссылку.")}</p>
             )}
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => videoInput.current?.click()}>⬆ Загрузить видео</button>
-              <span className="muted" style={{ fontSize: "0.8rem" }}>или</span>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => videoInput.current?.click()}>{t("⬆ Загрузить видео")}</button>
+              <span className="muted" style={{ fontSize: "0.8rem" }}>{t("или")}</span>
             </div>
             <input ref={videoInput} type="file" accept="video/*" hidden onChange={onVideoPick} />
-            <input className="input" placeholder="Ссылка YouTube или mp4" value={f.video_url} onChange={(e) => setF({ ...f, video_url: e.target.value })} />
+            <input className="input" placeholder={t("Ссылка YouTube или mp4")} value={f.video_url} onChange={(e) => setF({ ...f, video_url: e.target.value })} />
           </div>
 
-          {uploading && <div className="badge badge-soft">Загрузка файла…</div>}
+          {uploading && <div className="badge badge-soft">{t("Загрузка файла…")}</div>}
         </div>
 
         <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>Соцсети и ссылки</h3>
+          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Соцсети и ссылки")}</h3>
           <p className="soft" style={{ fontSize: "0.85rem", margin: 0 }}>
-            Галочка «всем» — ссылка видна каждому (портфолио). Без галочки — откроется только после подтверждения запроса.
+            {t("Галочка «всем» — ссылка видна каждому (портфолио). Без галочки — откроется только после подтверждения запроса.")}
           </p>
           {soc.map((s, i) => (
             <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -391,7 +394,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
               </select>
               <input
                 className="input"
-                placeholder="@ник или ссылка"
+                placeholder={t("@ник или ссылка")}
                 value={s.value}
                 onChange={(e) => setSoc((arr) => arr.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
                 style={{ flex: "1 1 120px" }}
@@ -402,7 +405,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
                   checked={s.is_public}
                   onChange={(e) => setSoc((arr) => arr.map((x, j) => (j === i ? { ...x, is_public: e.target.checked } : x)))}
                 />
-                всем
+                {t("всем")}
               </label>
               <button type="button" onClick={() => setSoc((arr) => arr.filter((_, j) => j !== i))}
                 className="btn btn-ghost btn-sm" style={{ padding: "4px 9px" }}>×</button>
@@ -414,14 +417,14 @@ export default function ProfileEditor({ userId, professions, specialist, contact
             style={{ alignSelf: "flex-start" }}
             onClick={() => setSoc((arr) => [...arr, { type: "instagram", value: "", is_public: true }])}
           >
-            + Добавить соцсеть
+            {t("+ Добавить соцсеть")}
           </button>
         </div>
 
         <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>Контакты для связи</h3>
-          <p className="soft" style={{ fontSize: "0.85rem", margin: 0 }}>Телефон и мессенджеры откроются заказчику только после того, как вы подтвердите его запрос.</p>
-          <div className="field"><label className="label">Телефон</label><input className="input" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} /></div>
+          <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Контакты для связи")}</h3>
+          <p className="soft" style={{ fontSize: "0.85rem", margin: 0 }}>{t("Телефон и мессенджеры откроются заказчику только после того, как вы подтвердите его запрос.")}</p>
+          <div className="field"><label className="label">{t("Телефон")}</label><input className="input" value={c.phone} onChange={(e) => setC({ ...c, phone: e.target.value })} /></div>
           <div className="field"><label className="label">WhatsApp</label><input className="input" value={c.whatsapp} onChange={(e) => setC({ ...c, whatsapp: e.target.value })} /></div>
           <div className="field"><label className="label">Telegram</label><input className="input" placeholder="@username" value={c.telegram} onChange={(e) => setC({ ...c, telegram: e.target.value })} /></div>
         </div>
@@ -429,7 +432,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
 
       {/* Сохранение */}
       <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 14 }}>
-        <button className="btn btn-primary" disabled={busy || uploading}>{busy ? "Сохраняем…" : "Сохранить анкету"}</button>
+        <button className="btn btn-primary" disabled={busy || uploading}>{busy ? t("Сохраняем…") : t("Сохранить анкету")}</button>
         {msg && <span className={`badge ${msg.ok ? "badge-accepted" : "badge-declined"}`}>{msg.text}</span>}
       </div>
     </form>

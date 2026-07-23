@@ -7,6 +7,7 @@ export type Segment = "toi" | "general";
 export interface Profession {
   id: string;
   label: string;
+  label_kk?: string;
   emoji: string;
   category: string;
   segment: Segment;

@@ -4,10 +4,12 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { useLang } from "@/lib/lang";
 import type { Role } from "@/lib/types";
 
 function RegisterForm() {
   const { signUp } = useAuth();
+  const { t } = useLang();
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "";
@@ -23,7 +25,7 @@ function RegisterForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
-      setErr("Пароль минимум 6 символов");
+      setErr(t("Пароль минимум 6 символов"));
       return;
     }
     setBusy(true);
@@ -31,7 +33,7 @@ function RegisterForm() {
     const error = await signUp(email, password, name, role);
     setBusy(false);
     if (error) {
-      setErr(error.includes("already") ? "Такой email уже зарегистрирован" : error);
+      setErr(error.includes("already") ? t("Такой email уже зарегистрирован") : error);
       return;
     }
     // Специалист идёт заполнять анкету, заказчик — куда шёл или в каталог
@@ -43,8 +45,8 @@ function RegisterForm() {
   return (
     <div className="container-narrow" style={{ padding: "48px 20px" }}>
       <div className="card card-pad" style={{ maxWidth: 460, margin: "0 auto" }}>
-        <h1 className="h2" style={{ marginBottom: 4 }}>Регистрация</h1>
-        <p className="soft" style={{ marginBottom: 18 }}>Выберите, как будете пользоваться платформой.</p>
+        <h1 className="h2" style={{ marginBottom: 4 }}>{t("Регистрация")}</h1>
+        <p className="soft" style={{ marginBottom: 18 }}>{t("Выберите, как будете пользоваться платформой.")}</p>
 
         {/* Выбор роли */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
@@ -52,21 +54,21 @@ function RegisterForm() {
             active={role === "client"}
             onClick={() => setRole("client")}
             emoji="🔎"
-            title="Я ищу"
-            desc="Найти и заказать специалиста"
+            title={t("Я ищу")}
+            desc={t("Найти и заказать специалиста")}
           />
           <RoleCard
             active={role === "specialist"}
             onClick={() => setRole("specialist")}
             emoji="⭐"
-            title="Я специалист"
-            desc="Разместить свою анкету"
+            title={t("Я специалист")}
+            desc={t("Разместить свою анкету")}
           />
         </div>
 
         <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="field">
-            <label className="label">{role === "specialist" ? "Имя или название" : "Ваше имя"}</label>
+            <label className="label">{role === "specialist" ? t("Имя или название") : t("Ваше имя")}</label>
             <input className="input" required value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="field">
@@ -74,16 +76,16 @@ function RegisterForm() {
             <input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
-            <label className="label">Пароль</label>
+            <label className="label">{t("Пароль")}</label>
             <input className="input" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {err && <div className="badge badge-declined">{err}</div>}
           <button className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Создаём…" : "Создать аккаунт"}
+            {busy ? t("Создаём…") : t("Создать аккаунт")}
           </button>
         </form>
         <p className="soft" style={{ marginTop: 16, fontSize: "0.9rem", textAlign: "center" }}>
-          Уже есть аккаунт? <Link href="/login" className="link">Войти</Link>
+          {t("Уже есть аккаунт?")} <Link href="/login" className="link">{t("Войти")}</Link>
         </p>
       </div>
     </div>

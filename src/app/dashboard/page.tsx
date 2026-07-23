@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { usePersona } from "@/lib/persona";
+import { useLang } from "@/lib/lang";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 import IncomingRequests from "@/components/dashboard/IncomingRequests";
 import BusyDatesManager from "@/components/dashboard/BusyDatesManager";
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const sb = supabaseBrowser();
   const { user, role, loading } = useAuth();
   const persona = usePersona();
+  const { t } = useLang();
   const router = useRouter();
 
   const debugOn = persona.ready && persona.active; // отладка включена — не требуем входа
@@ -72,9 +74,9 @@ export default function DashboardPage() {
       <div className="container-narrow" style={{ padding: "48px 20px", textAlign: "center" }}>
         <div className="card card-pad">
           <div style={{ fontSize: 34 }}>⭐</div>
-          <h1 className="h2" style={{ margin: "8px 0" }}>Это кабинет специалиста</h1>
-          <p className="soft">Вы вошли как заказчик. Ваши запросы — в разделе «Мои запросы».</p>
-          <Link href="/requests" className="btn btn-primary" style={{ marginTop: 12 }}>Мои запросы</Link>
+          <h1 className="h2" style={{ margin: "8px 0" }}>{t("Это кабинет специалиста")}</h1>
+          <p className="soft">{t("Вы вошли как заказчик. Ваши запросы — в разделе «Мои запросы».")}</p>
+          <Link href="/requests" className="btn btn-primary" style={{ marginTop: 12 }}>{t("Мои запросы")}</Link>
         </div>
       </div>
     );
@@ -84,13 +86,13 @@ export default function DashboardPage() {
     <div className="container" style={{ padding: "32px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
         <div>
-          <h1 className="h2" style={{ marginBottom: 2 }}>Кабинет специалиста</h1>
+          <h1 className="h2" style={{ marginBottom: 2 }}>{t("Кабинет специалиста")}</h1>
           <p className="soft" style={{ margin: 0 }}>
-            {specialist ? "Управляйте анкетой и заявками на связь." : "Заполните анкету, чтобы попасть в каталог."}
+            {specialist ? t("Управляйте анкетой и заявками на связь.") : t("Заполните анкету, чтобы попасть в каталог.")}
           </p>
         </div>
         {specialist && (
-          <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">Открыть мою анкету ↗</Link>
+          <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">{t("Открыть мою анкету ↗")}</Link>
         )}
       </div>
 
@@ -98,15 +100,15 @@ export default function DashboardPage() {
       <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--surface-2)", borderRadius: 999, marginBottom: 20 }}>
         <button className="btn btn-sm" onClick={() => setTab("profile")}
           style={{ background: tab === "profile" ? "var(--surface)" : "transparent", color: tab === "profile" ? "var(--brand)" : "var(--text-soft)", boxShadow: tab === "profile" ? "var(--shadow-sm)" : "none", fontWeight: 700 }}>
-          Анкета
+          {t("Анкета")}
         </button>
         <button className="btn btn-sm" onClick={() => setTab("busy")} disabled={!specialist}
           style={{ background: tab === "busy" ? "var(--surface)" : "transparent", color: tab === "busy" ? "var(--brand)" : "var(--text-soft)", boxShadow: tab === "busy" ? "var(--shadow-sm)" : "none", fontWeight: 700 }}>
-          Занятость
+          {t("Занятость")}
         </button>
         <button className="btn btn-sm" onClick={() => setTab("requests")}
           style={{ background: tab === "requests" ? "var(--surface)" : "transparent", color: tab === "requests" ? "var(--brand)" : "var(--text-soft)", boxShadow: tab === "requests" ? "var(--shadow-sm)" : "none", fontWeight: 700, display: "flex", alignItems: "center", gap: 7 }}>
-          Заявки {pendingCount > 0 && <span className="pill-count">{pendingCount}</span>}
+          {t("Заявки")} {pendingCount > 0 && <span className="pill-count">{pendingCount}</span>}
         </button>
       </div>
 
@@ -123,12 +125,12 @@ export default function DashboardPage() {
         specialist ? (
           <BusyDatesManager specialistId={specialist.id} />
         ) : (
-          <div className="card card-pad" style={{ color: "var(--text-mute)" }}>Сначала сохраните анкету.</div>
+          <div className="card card-pad" style={{ color: "var(--text-mute)" }}>{t("Сначала сохраните анкету.")}</div>
         )
       ) : specialist ? (
         <IncomingRequests specialistId={specialist.id} onChange={load} />
       ) : (
-        <div className="card card-pad" style={{ color: "var(--text-mute)" }}>Сначала сохраните анкету.</div>
+        <div className="card card-pad" style={{ color: "var(--text-mute)" }}>{t("Сначала сохраните анкету.")}</div>
       )}
     </div>
   );

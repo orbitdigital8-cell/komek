@@ -7,6 +7,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { usePersona } from "@/lib/persona";
 import { useUnread } from "@/lib/useUnread";
+import { useLang } from "@/lib/lang";
 import ReviewForm from "@/components/ReviewForm";
 import DebugClientCabinet from "@/components/DebugClientCabinet";
 import Chat from "@/components/Chat";
@@ -21,6 +22,7 @@ export default function RequestsPage() {
   const sb = supabaseBrowser();
   const { user, loading } = useAuth();
   const persona = usePersona();
+  const { t } = useLang();
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [ready, setReady] = useState(false);
@@ -67,12 +69,12 @@ export default function RequestsPage() {
 
   return (
     <div className="container-narrow" style={{ padding: "32px 20px" }}>
-      <h1 className="h2" style={{ marginBottom: 6 }}>Мои запросы</h1>
-      <p className="soft" style={{ marginBottom: 22 }}>Запросы на связь и открытые контакты специалистов.</p>
+      <h1 className="h2" style={{ marginBottom: 6 }}>{t("Мои запросы")}</h1>
+      <p className="soft" style={{ marginBottom: 22 }}>{t("Запросы на связь и открытые контакты специалистов.")}</p>
 
       {rows.length === 0 ? (
         <div className="card card-pad" style={{ textAlign: "center", color: "var(--text-mute)" }}>
-          Пока нет запросов. <Link href="/" className="link">Найти специалиста →</Link>
+          {t("Пока нет запросов.")} <Link href="/" className="link">{t("Найти специалиста →")}</Link>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -83,21 +85,21 @@ export default function RequestsPage() {
                 <img src={r.specialist?.avatar_url} alt="" className="avatar" style={{ width: 52, height: 52 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Link href={`/s/${r.specialist_id}`} className="link" style={{ fontSize: "1.05rem" }}>
-                    {r.specialist?.name ?? "Специалист"}
+                    {r.specialist?.name ?? t("Специалист")}
                   </Link>
                   <div className="muted" style={{ fontSize: "0.85rem" }}>
                     📍 {r.specialist?.city}
-                    {r.event_date ? ` · дата: ${r.event_date}` : ""}
+                    {r.event_date ? ` · ${t("дата:")} ${r.event_date}` : ""}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <button className="btn btn-outline btn-sm" onClick={() => setOpenChat(openChat === r.id ? null : r.id)} style={{ position: "relative" }}>
-                    {openChat === r.id ? "Скрыть чат" : "💬 Чат"}
+                    {openChat === r.id ? t("Скрыть чат") : `💬 ${t("Чат")}`}
                     {unread.has(r.id) && openChat !== r.id && (
-                      <span className="pill-count" style={{ marginLeft: 6 }}>новое</span>
+                      <span className="pill-count" style={{ marginLeft: 6 }}>{t("новое")}</span>
                     )}
                   </button>
-                  <span className={`badge ${STATUS_BADGE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+                  <span className={`badge ${STATUS_BADGE[r.status]}`}>{t(STATUS_LABEL[r.status])}</span>
                 </div>
               </div>
 
@@ -111,7 +113,7 @@ export default function RequestsPage() {
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)", display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                   {r.contacts.whatsapp && (
                     <a href={whatsappLink(r.contacts.whatsapp, `Здравствуйте! Пишу с Kömek${r.event_date ? ` по поводу мероприятия ${r.event_date}` : ""}.`)} target="_blank" rel="noreferrer" className="btn btn-sm" style={{ background: "#25D366", color: "#fff" }}>
-                      💬 Написать в WhatsApp
+                      💬 {t("Написать в WhatsApp")}
                     </a>
                   )}
                   {r.contacts.phone && <ContactPill type="phone" value={r.contacts.phone} href={`tel:${r.contacts.phone.replace(/\s/g, "")}`} />}
@@ -121,13 +123,13 @@ export default function RequestsPage() {
 
               {r.status === "pending" && (
                 <p className="soft" style={{ fontSize: "0.86rem", marginTop: 10, marginBottom: 0 }}>
-                  Ожидаем подтверждения. Контакты откроются после него — а обсудить детали можно уже сейчас в чате.
+                  {t("Ожидаем подтверждения. Контакты откроются после него — а обсудить детали можно уже сейчас в чате.")}
                 </p>
               )}
 
               {r.status === "completed" && (
                 <div style={{ marginTop: 10 }}>
-                  <div className="badge badge-completed" style={{ marginBottom: 8 }}>✓ Заказ выполнен — оставьте отзыв</div>
+                  <div className="badge badge-completed" style={{ marginBottom: 8 }}>{t("✓ Заказ выполнен — оставьте отзыв")}</div>
                   <ReviewForm specialistId={r.specialist_id} defaultName={r.client_name} />
                 </div>
               )}

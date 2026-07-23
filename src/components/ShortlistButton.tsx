@@ -1,9 +1,11 @@
 "use client";
 
 import { useShortlist } from "@/lib/shortlist";
+import { useLang } from "@/lib/lang";
 
 export default function ShortlistButton({ id, variant = "icon" }: { id: string; variant?: "icon" | "button" }) {
   const { has, toggle, ready } = useShortlist();
+  const { t } = useLang();
   const active = ready && has(id);
 
   function onClick(e: React.MouseEvent) {
@@ -15,7 +17,7 @@ export default function ShortlistButton({ id, variant = "icon" }: { id: string; 
   if (variant === "button") {
     return (
       <button onClick={onClick} className={`btn ${active ? "btn-primary" : "btn-outline"}`} aria-pressed={active}>
-        {active ? "❤ В избранном" : "🤍 В избранное"}
+        {active ? `❤ ${t("В избранном")}` : `🤍 ${t("В избранное")}`}
       </button>
     );
   }

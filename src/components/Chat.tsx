@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useLang } from "@/lib/lang";
 import type { Message } from "@/lib/types";
 
 // adminSenderId:
@@ -12,6 +13,7 @@ import type { Message } from "@/lib/types";
 export default function Chat({ requestId, peerName, adminSenderId }: { requestId: string; peerName?: string; adminSenderId?: string | null }) {
   const sb = supabaseBrowser();
   const { user } = useAuth();
+  const { t } = useLang();
   const adminMode = adminSenderId !== undefined;
   const meId = adminMode ? adminSenderId : user?.id;
 
@@ -93,7 +95,7 @@ export default function Chat({ requestId, peerName, adminSenderId }: { requestId
       <div ref={boxRef} style={{ maxHeight: 260, minHeight: 120, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8, background: "var(--surface-2)" }}>
         {messages.length === 0 ? (
           <div className="muted" style={{ margin: "auto", fontSize: "0.86rem", textAlign: "center" }}>
-            Сообщений пока нет. Напишите первым{peerName ? ` — ${peerName} ответит здесь` : ""}.
+            {t("Сообщений пока нет. Напишите первым")}{peerName ? ` — ${peerName}` : ""}.
           </div>
         ) : (
           messages.map((m) => {
@@ -121,8 +123,8 @@ export default function Chat({ requestId, peerName, adminSenderId }: { requestId
         )}
       </div>
       <form onSubmit={send} style={{ display: "flex", gap: 8, padding: 10, borderTop: "1px solid var(--border)" }}>
-        <input className="input" placeholder={canSend ? "Сообщение…" : "У этой персоны нет аккаунта — только чтение"} value={text} onChange={(e) => setText(e.target.value)} style={{ flex: 1 }} disabled={!canSend} />
-        <button className="btn btn-primary btn-sm" disabled={sending || !text.trim() || !canSend}>Отправить</button>
+        <input className="input" placeholder={canSend ? t("Сообщение…") : "У этой персоны нет аккаунта — только чтение"} value={text} onChange={(e) => setText(e.target.value)} style={{ flex: 1 }} disabled={!canSend} />
+        <button className="btn btn-primary btn-sm" disabled={sending || !text.trim() || !canSend}>{t("Отправить")}</button>
       </form>
     </div>
   );

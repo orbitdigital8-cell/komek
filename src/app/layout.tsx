@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ShortlistProvider } from "@/lib/shortlist";
 import { PersonaProvider } from "@/lib/persona";
+import { LangProvider } from "@/lib/lang";
+import { makeT, type Lang } from "@/lib/i18n";
 import Header from "@/components/Header";
 import ShortlistBar from "@/components/ShortlistBar";
 import DebugBar from "@/components/DebugBar";
@@ -22,26 +25,32 @@ export const metadata: Metadata = {
     "Kömek — каталог тамада, ведущих, аниматоров, диджеев, фотографов, а также нянь, домработниц и водителей. Найдите нужного специалиста для тоя, праздника или дома.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const lang: Lang = cookieStore.get("lang")?.value === "kk" ? "kk" : "ru";
+  const t = makeT(lang);
+
   return (
-    <html lang="ru" className={manrope.variable}>
+    <html lang={lang === "kk" ? "kk" : "ru"} className={manrope.variable}>
       <body>
         <AuthProvider>
           <ShortlistProvider>
           <PersonaProvider>
+          <LangProvider initial={lang}>
             <Header />
             <DebugBar />
             <main>{children}</main>
             <ShortlistBar />
           <footer style={{ borderTop: "1px solid var(--border)", marginTop: 64, padding: "28px 0" }}>
             <div className="container" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, color: "var(--text-mute)", fontSize: "0.88rem" }}>
-              <span>© 2026 Kömek — маркетплейс специалистов для мероприятий и дома</span>
+              <span>{t("© 2026 Kömek — маркетплейс специалистов для мероприятий и дома")}</span>
               <span style={{ display: "flex", gap: 14 }}>
-                Казахстан · демо-версия
-                {process.env.ADMIN_DEBUG === "1" && <Link href="/admin" className="link">⚙ Админ</Link>}
+                {t("Казахстан · демо-версия")}
+                {process.env.ADMIN_DEBUG === "1" && <Link href="/admin" className="link">⚙ {t("Админ")}</Link>}
               </span>
             </div>
           </footer>
+          </LangProvider>
           </PersonaProvider>
           </ShortlistProvider>
         </AuthProvider>
