@@ -7,7 +7,7 @@ export async function GET() {
   if (!adminEnabled()) return NextResponse.json({ error: "disabled" }, { status: 403 });
   const sb = supabaseAdmin();
 
-  const [professions, specialists, requests, reviews, profiles, busy, contacts, socials] = await Promise.all([
+  const [professions, specialists, requests, reviews, profiles, busy, contacts, socials, reports] = await Promise.all([
     sb.from("professions").select("*").order("sort_order"),
     sb.from("specialists").select("*").order("created_at", { ascending: false }),
     sb.from("contact_requests").select("*").order("created_at", { ascending: false }),
@@ -16,6 +16,7 @@ export async function GET() {
     sb.from("specialist_busy").select("*"),
     sb.from("specialist_contacts").select("*"),
     sb.from("specialist_socials").select("*"),
+    sb.from("reports").select("*").order("created_at", { ascending: false }),
   ]);
 
   return NextResponse.json({
@@ -27,5 +28,6 @@ export async function GET() {
     busy: busy.data ?? [],
     contacts: contacts.data ?? [],
     socials: socials.data ?? [],
+    reports: reports.data ?? [],
   });
 }

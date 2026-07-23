@@ -5,7 +5,7 @@ import Stars from "@/components/Stars";
 import ShortlistButton from "@/components/ShortlistButton";
 import { useLang } from "@/lib/lang";
 import { expLabel, priceLabelL, profName } from "@/lib/i18n";
-import { type Profession, type Specialist } from "@/lib/types";
+import { isFastResponder, type Profession, type Specialist } from "@/lib/types";
 
 export default function SpecialistCard({
   s,
@@ -52,8 +52,9 @@ export default function SpecialistCard({
             {s.review_count > 0 && <span className="muted" style={{ fontSize: "0.78rem" }}>({s.review_count})</span>}
           </span>
         </div>
-        <div className="muted" style={{ fontSize: "0.85rem" }}>
-          📍 {t(s.city)} · {expLabel(s.experience_years, lang)}
+        <div className="muted" style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <span>📍 {t(s.city)} · {expLabel(s.experience_years, lang)}</span>
+          {isFastResponder(s) && <span title={t("Отвечает быстро")} style={{ color: "var(--good)", fontWeight: 700, fontSize: "0.78rem" }}>⚡ {t("быстрый ответ")}</span>}
         </div>
         <p className="soft" style={{ fontSize: "0.9rem", margin: "2px 0 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
           {t(s.tagline)}

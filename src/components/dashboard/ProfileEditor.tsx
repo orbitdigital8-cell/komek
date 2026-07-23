@@ -189,8 +189,47 @@ export default function ProfileEditor({ userId, professions, specialist, contact
     onSaved();
   }
 
+  // Заполненность анкеты: чем полнее — тем живее выглядит в каталоге
+  const completeness = (() => {
+    const items: { ok: boolean; hint: string; w: number }[] = [
+      { ok: !!f.name.trim(), hint: "Укажите имя", w: 10 },
+      { ok: !!f.city.trim(), hint: "Укажите город", w: 5 },
+      { ok: !!f.tagline.trim(), hint: "Добавьте короткое описание", w: 10 },
+      { ok: f.about.trim().length >= 80, hint: "Расскажите о себе подробнее", w: 10 },
+      { ok: !!f.price_from, hint: "Укажите цену", w: 5 },
+      { ok: !!f.avatar_url, hint: "Загрузите главное фото", w: 10 },
+      { ok: gallery.length >= 3, hint: "Добавьте 3+ фото в галерею", w: 15 },
+      { ok: !!f.video_url, hint: "Добавьте видео-визитку", w: 15 },
+      { ok: tags.length >= 3, hint: "Добавьте 3+ тега", w: 5 },
+      { ok: !!(c.phone.trim() || c.whatsapp.trim()), hint: "Заполните контакты", w: 10 },
+      { ok: soc.some((s) => s.value.trim()), hint: "Добавьте соцсеть", w: 5 },
+    ];
+    const total = items.reduce((sum, i) => sum + i.w, 0);
+    const got = items.reduce((sum, i) => sum + (i.ok ? i.w : 0), 0);
+    const missing = items.filter((i) => !i.ok).sort((a, b) => b.w - a.w).slice(0, 2);
+    return { pct: Math.round((got / total) * 100), missing };
+  })();
+
   return (
     <form onSubmit={save} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 16 }} className="editor-grid">
+      {/* Заполненность анкеты */}
+      <div className="card card-pad" style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+          <strong style={{ fontSize: "0.95rem" }}>{t("Заполненность анкеты")}: {completeness.pct}%</strong>
+          {completeness.pct === 100 && <span className="badge badge-accepted">✓ {t("Анкета заполнена полностью")}</span>}
+        </div>
+        <div style={{ height: 8, borderRadius: 999, background: "var(--surface-2)", overflow: "hidden" }}>
+          <div style={{ width: `${completeness.pct}%`, height: "100%", borderRadius: 999, background: completeness.pct >= 80 ? "var(--good)" : "var(--brand)", transition: "width .3s" }} />
+        </div>
+        {completeness.missing.length > 0 && (
+          <div className="muted" style={{ fontSize: "0.85rem", display: "flex", gap: 14, flexWrap: "wrap" }}>
+            {completeness.missing.map((m) => (
+              <span key={m.hint}>→ {t(m.hint)} <span style={{ color: "var(--brand)", fontWeight: 700 }}>+{m.w}%</span></span>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Основное */}
       <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Основное")}</h3>

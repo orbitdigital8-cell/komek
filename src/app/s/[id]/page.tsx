@@ -11,7 +11,8 @@ import SocialLinks from "@/components/SocialLinks";
 import { supabaseServer } from "@/lib/supabase/server";
 import { fieldsFor, formatAttr } from "@/lib/fields";
 import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
-import { formatDate, type BusyDate, type Profession, type Review, type Social, type Specialist } from "@/lib/types";
+import ReportButton from "@/components/ReportButton";
+import { formatDate, isFastResponder, type BusyDate, type Profession, type Review, type Social, type Specialist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,9 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
   const { data: specialist } = await sb.from("specialists").select("*").eq("id", id).maybeSingle();
   if (!specialist) notFound();
   const s = specialist as Specialist;
+
+  // Счётчик просмотров анкеты (ошибки не критичны)
+  await sb.from("profile_views").insert({ specialist_id: s.id });
 
   const { data: prof } = await sb.from("professions").select("*").eq("id", s.profession).maybeSingle();
   const p = prof as Profession | null;
@@ -69,6 +73,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <h1 className="h2" style={{ margin: 0 }}>{s.name}</h1>
                 {s.verified && <span className="badge badge-verified">✔ {t("Проверен")}</span>}
+                {isFastResponder(s) && <span className="badge badge-accepted">⚡ {t("Отвечает быстро")}</span>}
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                   <Stars rating={s.rating} size={15} />
                   <span className="muted" style={{ fontSize: "0.85rem" }}>
@@ -164,6 +169,10 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               {t("Отзывы")} {s.review_count > 0 && <span className="muted" style={{ fontWeight: 400 }}>· {s.rating.toFixed(1)} ★</span>}
             </h3>
             <ReviewsList reviews={reviews} />
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 8 }}>
+            <ReportButton specialistId={s.id} />
           </div>
         </div>
 

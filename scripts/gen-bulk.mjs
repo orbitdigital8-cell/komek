@@ -175,5 +175,18 @@ sql += batchInsert("insert into public.specialists (id, owner_id, profession, na
 sql += batchInsert("insert into public.specialist_contacts (specialist_id, phone, whatsapp, telegram) values", contacts);
 sql += batchInsert("insert into public.specialist_socials (specialist_id, type, value, is_public, sort_order) values", socials);
 
+// Скорость ответа: ~70% демо-анкет «отвечали» раньше, у половины — быстро (< часа)
+sql += `-- Демо-статистика: скорость ответа и просмотры анкет
+update public.specialists set
+  response_minutes = case when random() < 0.5 then 5 + floor(random() * 55) else 90 + floor(random() * 600) end,
+  response_count   = 3 + floor(random() * 25)::int
+where is_demo and random() < 0.7;
+
+insert into public.profile_views (specialist_id, viewed_at)
+select s.id, now() - (random() * 7 || ' days')::interval
+from public.specialists s, generate_series(1, 30)
+where s.is_demo and random() < 0.5;
+`;
+
 writeFileSync(new URL("../supabase/seed_bulk.sql", import.meta.url), sql);
 console.log(`Generated ${specialists.length} specialists, ${contacts.length} contacts, ${socials.length} socials -> supabase/seed_bulk.sql`);

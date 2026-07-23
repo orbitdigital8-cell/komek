@@ -4,6 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatDate, priceLabel, STATUS_BADGE, STATUS_LABEL, type BusyDate, type ContactRequest, type Profession, type RequestStatus, type Review, type Social, type Specialist, type SpecialistContacts } from "@/lib/types";
 
+interface Report {
+  id: string;
+  specialist_id: string;
+  reporter_id: string | null;
+  reason: string;
+  details: string;
+  status: "new" | "resolved";
+  created_at: string;
+}
+
 interface AdminData {
   professions: Profession[];
   specialists: Specialist[];
@@ -13,9 +23,10 @@ interface AdminData {
   busy: BusyDate[];
   contacts: SpecialistContacts[];
   socials: Social[];
+  reports: Report[];
 }
 
-type Tab = "overview" | "requests" | "specialists" | "persona";
+type Tab = "overview" | "requests" | "specialists" | "reports" | "persona";
 
 type Maps = {
   spById: Record<string, Specialist>;
@@ -63,6 +74,7 @@ export default function AdminPanel() {
     { key: "overview", label: "Обзор" },
     { key: "requests", label: `Заявки (${data.requests.length})` },
     { key: "specialists", label: `Специалисты (${data.specialists.length})` },
+    { key: "reports", label: `Жалобы (${(data.reports ?? []).filter((r) => r.status === "new").length})` },
     { key: "persona", label: "Персоны — обе панели" },
   ];
 
@@ -86,6 +98,7 @@ export default function AdminPanel() {
       {tab === "overview" && <Overview data={data} />}
       {tab === "requests" && <RequestsTable data={data} maps={maps} onStatus={setStatus} />}
       {tab === "specialists" && <SpecialistsTable data={data} maps={maps} />}
+      {tab === "reports" && <ReportsTable data={data} maps={maps} onDone={load} />}
       {tab === "persona" && <Persona data={data} maps={maps} onStatus={setStatus} />}
     </div>
   );
@@ -111,6 +124,54 @@ function Overview({ data }: { data: AdminData }) {
           {c.sub && <div className="soft" style={{ fontSize: "0.8rem" }}>{c.sub}</div>}
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ---------- Жалобы ---------- */
+function ReportsTable({ data, maps, onDone }: { data: AdminData; maps: Maps; onDone: () => void }) {
+  const reports = data.reports ?? [];
+  async function setReportStatus(id: string, status: "new" | "resolved") {
+    await fetch("/api/admin/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    onDone();
+  }
+  if (reports.length === 0) return <div className="card card-pad muted">Жалоб нет.</div>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {reports.map((r) => {
+        const sp = maps.spById[r.specialist_id];
+        return (
+          <div key={r.id} className="card card-pad" style={{ opacity: r.status === "resolved" ? 0.55 : 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <strong>{r.reason}</strong>
+                <span className="muted" style={{ marginLeft: 10, fontSize: "0.82rem" }}>{formatDate(r.created_at)}</span>
+                <div style={{ marginTop: 4 }}>
+                  {sp ? (
+                    <Link href={`/s/${sp.id}`} className="link">{sp.name}</Link>
+                  ) : (
+                    <span className="muted">анкета удалена</span>
+                  )}
+                  <span className="muted" style={{ marginLeft: 8, fontSize: "0.82rem" }}>
+                    {r.reporter_id ? `от ${maps.profileById[r.reporter_id]?.full_name || "пользователя"}` : "от гостя"}
+                  </span>
+                </div>
+                {r.details && <p className="soft" style={{ fontSize: "0.9rem", margin: "6px 0 0" }}>{r.details}</p>}
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                {r.status === "new" ? (
+                  <button className="btn btn-primary btn-sm" onClick={() => setReportStatus(r.id, "resolved")}>✓ Решено</button>
+                ) : (
+                  <>
+                    <span className="badge badge-completed">решено</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setReportStatus(r.id, "new")}>↺ Вернуть</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

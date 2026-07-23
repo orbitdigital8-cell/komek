@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [contacts, setContacts] = useState<SpecialistContacts | null>(null);
   const [socials, setSocials] = useState<Social[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [viewsWeek, setViewsWeek] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
 
   const load = useCallback(async () => {
@@ -42,14 +43,17 @@ export default function DashboardPage() {
     const s = (sp as Specialist) ?? null;
     setSpecialist(s);
     if (s) {
-      const [{ data: c }, { data: soc }, { count }] = await Promise.all([
+      const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+      const [{ data: c }, { data: soc }, { count }, { count: views }] = await Promise.all([
         sb.from("specialist_contacts").select("*").eq("specialist_id", s.id).maybeSingle(),
         sb.from("specialist_socials").select("*").eq("specialist_id", s.id).order("sort_order"),
         sb.from("contact_requests").select("id", { count: "exact", head: true }).eq("specialist_id", s.id).eq("status", "pending"),
+        sb.from("profile_views").select("id", { count: "exact", head: true }).eq("specialist_id", s.id).gte("viewed_at", weekAgo),
       ]);
       setContacts((c as SpecialistContacts) ?? null);
       setSocials((soc as Social[]) ?? []);
       setPendingCount(count ?? 0);
+      setViewsWeek(views ?? 0);
     }
     setReady(true);
   }, [sb, user]);
@@ -91,9 +95,14 @@ export default function DashboardPage() {
             {specialist ? t("Управляйте анкетой и заявками на связь.") : t("Заполните анкету, чтобы попасть в каталог.")}
           </p>
         </div>
-        {specialist && (
-          <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">{t("Открыть мою анкету ↗")}</Link>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {specialist && viewsWeek !== null && (
+            <span className="badge badge-soft" title={t("Просмотры анкеты за 7 дней")}>👁 {viewsWeek} {t("за неделю")}</span>
+          )}
+          {specialist && (
+            <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">{t("Открыть мою анкету ↗")}</Link>
+          )}
+        </div>
       </div>
 
       {/* Табы */}

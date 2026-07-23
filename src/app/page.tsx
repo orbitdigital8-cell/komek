@@ -11,14 +11,19 @@ export default async function HomePage() {
   const lang: Lang = (await cookies()).get("lang")?.value === "kk" ? "kk" : "ru";
   const t = makeT(lang);
   const sb = await supabaseServer();
-  // Для каталога берём только поля, нужные карточкам (без тяжёлого «about») — легче при 1500+ анкетах.
-  const [{ data: professions }, { data: specialists }] = await Promise.all([
+  // Первая страница каталога — с сервера; дальше клиент запрашивает сам (серверная пагинация).
+  const [{ data: professions }, { data: specialists, count }] = await Promise.all([
     sb.from("professions").select("*").order("sort_order"),
     sb
       .from("specialists")
-      .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified")
+      .select(
+        "id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count",
+        { count: "exact" },
+      )
       .eq("published", true)
-      .order("rating", { ascending: false }),
+      .order("rating", { ascending: false })
+      .order("review_count", { ascending: false })
+      .range(0, 47),
   ]);
 
   return (
@@ -73,7 +78,8 @@ export default async function HomePage() {
         </div>
         <Catalog
           professions={(professions as Profession[]) ?? []}
-          specialists={(specialists as unknown as Specialist[]) ?? []}
+          initialSpecialists={(specialists as unknown as Specialist[]) ?? []}
+          initialCount={count ?? 0}
         />
       </section>
     </>

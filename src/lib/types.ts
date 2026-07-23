@@ -41,6 +41,13 @@ export interface Specialist {
   published: boolean;
   is_demo: boolean;
   created_at: string;
+  response_minutes: number | null;
+  response_count: number;
+}
+
+// Быстро отвечает: среднее время ответа ≤ 60 минут при ≥ 3 ответах
+export function isFastResponder(s: Pick<Specialist, "response_minutes" | "response_count">): boolean {
+  return s.response_minutes != null && s.response_minutes <= 60 && s.response_count >= 3;
 }
 
 export interface Message {
