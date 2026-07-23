@@ -402,6 +402,16 @@ button {
     padding: 7px 11px;
     font-size: 0.82rem;
   }
+  /* Шапка: ужимаем кнопки, чтобы всё влезло с «Биржей» и языком */
+  header .btn-sm {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+  header .container {
+    gap: 6px !important;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
   /* Фильтры каталога — на всю ширину, чтобы текст не обрезался */
   .catalog-filters .select,
   .catalog-filters .input {

@@ -77,7 +77,10 @@ export default function ShortlistPage() {
     <div className="container" style={{ padding: "28px 22px 0" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
         <h1 className="h2" style={{ margin: 0 }}>{t("Избранное и сравнение")}</h1>
-        <button onClick={clear} className="btn btn-ghost btn-sm">{t("Очистить всё")}</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <ShareButton ids={ids} />
+          <button onClick={clear} className="btn btn-ghost btn-sm">{t("Очистить всё")}</button>
+        </div>
       </div>
       <p className="soft" style={{ marginBottom: 20 }}>{t("Сравните выбранных специалистов и выберите лучшего.")}</p>
 
@@ -126,6 +129,26 @@ export default function ShortlistPage() {
         <Link href="/" className="link">{t("← Добавить ещё из каталога")}</Link>
       </div>
     </div>
+  );
+}
+
+// Поделиться подборкой: системный share на телефоне, иначе — копия ссылки
+function ShareButton({ ids }: { ids: string[] }) {
+  const { t } = useLang();
+  const [copied, setCopied] = useState(false);
+  async function share() {
+    const url = `${window.location.origin}/compare?ids=${ids.join(",")}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: "Kömek", url }); return; } catch { /* отменили */ }
+    }
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button onClick={share} className="btn btn-outline btn-sm">
+      {copied ? `✓ ${t("Ссылка скопирована")}` : `🔗 ${t("Поделиться подборкой")}`}
+    </button>
   );
 }
 

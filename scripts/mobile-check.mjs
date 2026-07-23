@@ -13,6 +13,8 @@ for (const [i, url] of pages.entries()) {
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1");
+  page.on("console", (m) => { if (m.type() === "error") console.log("  CONSOLE:", m.text().slice(0, 300)); });
+  page.on("pageerror", (e) => console.log("  PAGEERROR:", String(e).slice(0, 300)));
   await page.goto(url, { waitUntil: "networkidle2", timeout: 90000 });
   await new Promise((r) => setTimeout(r, 1500));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/lang";
@@ -15,8 +15,23 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [text, setText] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  async function onPhotoPick(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!user) return;
+    const files = Array.from(e.target.files ?? []).slice(0, 5);
+    setBusy(true);
+    for (const file of files) {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await sb.storage.from("media").upload(path, file);
+      if (!error) setPhotos((p) => [...p, sb.storage.from("media").getPublicUrl(path).data.publicUrl]);
+    }
+    setBusy(false);
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -31,7 +46,7 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
     if (!user) return;
     setBusy(true);
     const { error } = await sb.from("reviews").upsert(
-      { specialist_id: specialistId, client_id: user.id, author_name: name || defaultName, rating, text },
+      { specialist_id: specialistId, client_id: user.id, author_name: name || defaultName, rating, text, photos },
       { onConflict: "specialist_id,client_id" },
     );
     setBusy(false);
@@ -73,7 +88,17 @@ export default function ReviewForm({ specialistId, defaultName }: { specialistId
         ))}
       </div>
       <textarea className="textarea" placeholder={t("Как прошло? Что понравилось?")} value={text} onChange={(e) => setText(e.target.value)} style={{ minHeight: 72 }} />
-      <div style={{ display: "flex", gap: 8 }}>
+      {photos.length > 0 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {photos.map((u, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={u} alt="" style={{ width: 64, height: 48, objectFit: "cover", borderRadius: 6 }} />
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => fileInput.current?.click()}>📷 {t("+ Фото с мероприятия")}</button>
+        <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={onPhotoPick} />
         <button className="btn btn-primary btn-sm" disabled={busy} onClick={submit}>{busy ? t("Отправляем…") : t("Опубликовать отзыв")}</button>
         <button className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>{t("Отмена")}</button>
       </div>

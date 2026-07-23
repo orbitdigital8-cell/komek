@@ -12,7 +12,9 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { fieldsFor, formatAttr } from "@/lib/fields";
 import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
 import ReportButton from "@/components/ReportButton";
-import { formatDate, isFastResponder, type BusyDate, type Profession, type Review, type Social, type Specialist } from "@/lib/types";
+import ViewTracker from "@/components/ViewTracker";
+import SpecialistCard from "@/components/SpecialistCard";
+import { formatDate, isFastResponder, type BusyDate, type PortfolioCase, type Profession, type Review, type Social, type Specialist, type SpecialistPackage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -47,19 +49,30 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
   const publicSocials = (socialsData as Social[]) ?? [];
 
   const today = new Date().toISOString().slice(0, 10);
-  const { data: busyData } = await sb
-    .from("specialist_busy")
-    .select("specialist_id, busy_date, note")
-    .eq("specialist_id", s.id)
-    .gte("busy_date", today)
-    .order("busy_date");
+  const [{ data: busyData }, { data: packagesData }, { data: casesData }, { data: similarData }] = await Promise.all([
+    sb.from("specialist_busy").select("specialist_id, busy_date, note").eq("specialist_id", s.id).gte("busy_date", today).order("busy_date"),
+    sb.from("specialist_packages").select("*").eq("specialist_id", s.id).order("sort_order"),
+    sb.from("portfolio_cases").select("*").eq("specialist_id", s.id).order("sort_order"),
+    sb
+      .from("specialists")
+      .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count")
+      .eq("published", true)
+      .eq("profession", s.profession)
+      .neq("id", s.id)
+      .order("rating", { ascending: false })
+      .limit(4),
+  ]);
   const busy = (busyData as BusyDate[]) ?? [];
   const busyDates = busy.map((b) => b.busy_date);
+  const packages = (packagesData as SpecialistPackage[]) ?? [];
+  const cases = (casesData as PortfolioCase[]) ?? [];
+  const similar = (similarData as unknown as Specialist[]) ?? [];
 
   const images = s.gallery.length ? s.gallery : s.avatar_url ? [s.avatar_url] : [];
 
   return (
     <div className="container" style={{ padding: "24px 20px 0" }}>
+      <ViewTracker id={s.id} />
       <Link href="/" className="link" style={{ fontSize: "0.9rem" }}>← {t("Каталог")}</Link>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 28, marginTop: 16, alignItems: "start" }} className="profile-grid">
@@ -124,9 +137,27 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
             );
           })()}
 
+          {/* Пакеты услуг */}
+          {packages.length > 0 && (
+            <div style={{ marginTop: 22 }}>
+              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 10 }}>💼 {t("Пакеты услуг")}</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+                {packages.map((pk) => (
+                  <div key={pk.id} className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <strong>{t(pk.name)}</strong>
+                    <span style={{ color: "var(--brand)", fontWeight: 800, fontSize: "1.15rem" }}>{pk.price.toLocaleString("ru-RU")} ₸</span>
+                    {pk.description && <span className="soft" style={{ fontSize: "0.85rem" }}>{tText(pk.description, lang)}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 22 }}>
             <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 8 }}>{t("О специалисте")}</h3>
-            <p style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>{tText(s.about || s.tagline, lang)}</p>
+            <p style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
+              {lang === "kk" && s.about_kk ? s.about_kk : tText(s.about || s.tagline, lang)}
+            </p>
           </div>
 
           {s.tags.length > 0 && (
@@ -134,6 +165,32 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               {s.tags.map((tg) => (
                 <span key={tg} className="chip" style={{ cursor: "default", fontSize: "0.82rem" }}>#{t(tg)}</span>
               ))}
+            </div>
+          )}
+
+          {/* Портфолио-кейсы */}
+          {cases.length > 0 && (
+            <div style={{ marginTop: 22 }}>
+              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 10 }}>🏆 {t("Кейсы")}</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {cases.map((c) => (
+                  <div key={c.id} className="card card-pad">
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <strong>{tText(c.title, lang)}</strong>
+                      {c.event_date && <span className="muted" style={{ fontSize: "0.82rem" }}>{formatDate(c.event_date, true)}</span>}
+                    </div>
+                    {c.description && <p className="soft" style={{ fontSize: "0.9rem", margin: "6px 0 0" }}>{tText(c.description, lang)}</p>}
+                    {c.photos.length > 0 && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                        {c.photos.map((u, i) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={i} src={u} alt="" style={{ width: 130, height: 92, objectFit: "cover", borderRadius: 10 }} loading="lazy" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -171,13 +228,25 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
             <ReviewsList reviews={reviews} />
           </div>
 
+          {/* Похожие специалисты */}
+          {similar.length > 0 && (
+            <div style={{ marginTop: 26 }}>
+              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 12 }}>{t("Похожие специалисты")}</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+                {similar.map((sp) => (
+                  <SpecialistCard key={sp.id} s={sp} prof={p ?? undefined} />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 20, marginBottom: 8 }}>
             <ReportButton specialistId={s.id} />
           </div>
         </div>
 
         {/* Правая колонка — контакты */}
-        <ContactPanel specialist={s} busyDates={busyDates} />
+        <ContactPanel specialist={s} busyDates={busyDates} packages={packages} />
       </div>
     </div>
   );

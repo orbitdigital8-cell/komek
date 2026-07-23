@@ -7,9 +7,9 @@ import { useAuth } from "@/lib/auth";
 import BrandIcon from "@/components/BrandIcon";
 import { useLang } from "@/lib/lang";
 import { priceLabelL } from "@/lib/i18n";
-import { socialHref, SOCIAL_META, STATUS_LABEL, type ContactRequest, type Social, type SpecialistContacts, type Specialist } from "@/lib/types";
+import { socialHref, SOCIAL_META, STATUS_LABEL, type ContactRequest, type Social, type SpecialistContacts, type Specialist, type SpecialistPackage } from "@/lib/types";
 
-export default function ContactPanel({ specialist, busyDates = [] }: { specialist: Specialist; busyDates?: string[] }) {
+export default function ContactPanel({ specialist, busyDates = [], packages = [] }: { specialist: Specialist; busyDates?: string[]; packages?: SpecialistPackage[] }) {
   const sb = supabaseBrowser();
   const { user, name, loading: authLoading } = useAuth();
   const { lang, t } = useLang();
@@ -21,6 +21,7 @@ export default function ContactPanel({ specialist, busyDates = [] }: { specialis
 
   // форма запроса
   const [form, setForm] = useState({ client_name: "", client_phone: "", event_date: "", message: "" });
+  const [pkg, setPkg] = useState(""); // выбранный пакет услуг
   const [sending, setSending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -75,7 +76,7 @@ export default function ContactPanel({ specialist, busyDates = [] }: { specialis
         client_name: form.client_name,
         client_phone: form.client_phone,
         event_date: form.event_date || null,
-        message: form.message,
+        message: pkg ? `${t("Пакет")}: ${pkg}\n${form.message}`.trim() : form.message,
       })
       .select("*")
       .single();
@@ -186,6 +187,19 @@ export default function ContactPanel({ specialist, busyDates = [] }: { specialis
             <span className="badge badge-accepted" style={{ marginTop: 4 }}>{t("✓ В этот день специалист свободен")}</span>
           )}
         </div>
+        {packages.length > 0 && (
+          <div className="field">
+            <label className="label">{t("Пакет услуг (по желанию)")}</label>
+            <select className="select" value={pkg} onChange={(e) => setPkg(e.target.value)}>
+              <option value="">{t("Не выбран — обсудим")}</option>
+              {packages.map((p) => (
+                <option key={p.id} value={`${p.name} (${p.price.toLocaleString("ru-RU")} ₸)`}>
+                  {t(p.name)} — {p.price.toLocaleString("ru-RU")} ₸
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="field">
           <label className="label">{t("Сообщение")}</label>
           <textarea className="textarea" placeholder={t("Коротко о мероприятии: где, во сколько, что нужно")} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />

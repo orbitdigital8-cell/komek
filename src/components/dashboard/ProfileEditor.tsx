@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import BrandIcon from "@/components/BrandIcon";
 import { fieldsFor } from "@/lib/fields";
@@ -56,10 +56,54 @@ export default function ProfileEditor({ userId, professions, specialist, contact
 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [aiOn, setAiOn] = useState(false);
+  const [aiBusy, setAiBusy] = useState<"" | "assist" | "translate">("");
+  const [kk, setKk] = useState({ tagline_kk: specialist?.tagline_kk ?? "", about_kk: specialist?.about_kk ?? "" });
+  const [modWarn, setModWarn] = useState<string | null>(null);
   const avatarInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
   const videoInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/ai/status").then((r) => r.json()).then((d) => setAiOn(!!d.enabled)).catch(() => {});
+  }, []);
+
+  // ✨ ИИ-помощник: улучшает слоган, «о себе» и предлагает теги
+  async function aiAssist() {
+    setAiBusy("assist");
+    try {
+      const r = await fetch("/api/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profession: professions.find((p) => p.id === f.profession)?.label ?? f.profession,
+          name: f.name, city: f.city, tagline: f.tagline, about: f.about,
+        }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setF((s) => ({ ...s, tagline: d.tagline ?? s.tagline, about: d.about ?? s.about }));
+        if (Array.isArray(d.tags)) setTags((cur) => Array.from(new Set([...cur, ...d.tags])).slice(0, 8));
+      }
+    } catch { /* ignore */ }
+    setAiBusy("");
+  }
+
+  // 🇰🇿 ИИ-перевод анкеты на казахский (сохранится вместе с анкетой)
+  async function aiTranslate() {
+    setAiBusy("translate");
+    try {
+      const r = await fetch("/api/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tagline: f.tagline, about: f.about }),
+      });
+      const d = await r.json();
+      if (r.ok) setKk({ tagline_kk: d.tagline_kk ?? "", about_kk: d.about_kk ?? "" });
+    } catch { /* ignore */ }
+    setAiBusy("");
+  }
 
   function movePhoto(i: number, dir: -1 | 1) {
     setGallery((g) => {
@@ -142,7 +186,21 @@ export default function ProfileEditor({ userId, professions, specialist, contact
       tags,
       attributes: attrs,
       published: f.published,
+      tagline_kk: kk.tagline_kk,
+      about_kk: kk.about_kk,
     };
+
+    // Мягкая ИИ-модерация (не блокирует сохранение)
+    if (aiOn) {
+      fetch("/api/ai/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: `${f.tagline}\n${f.about}` }),
+      })
+        .then((r) => r.json())
+        .then((d) => setModWarn(d.ok === false ? d.reason ?? "Проверьте текст анкеты" : null))
+        .catch(() => {});
+    }
 
     // Режим отладки: всё сохранение — через админский API (обход RLS)
     if (adminSpecialistId) {
@@ -268,6 +326,27 @@ export default function ProfileEditor({ userId, professions, specialist, contact
           <label className="label">{t("Подробно о себе")}</label>
           <textarea className="textarea" value={f.about} onChange={(e) => setF({ ...f, about: e.target.value })} />
         </div>
+
+        {/* ИИ-инструменты (видны при наличии ANTHROPIC_API_KEY) */}
+        {aiOn && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" className="btn btn-outline btn-sm" disabled={aiBusy !== ""} onClick={aiAssist}>
+                {aiBusy === "assist" ? t("Пишем…") : `✨ ${t("Улучшить описание (ИИ)")}`}
+              </button>
+              <button type="button" className="btn btn-outline btn-sm" disabled={aiBusy !== "" || !f.about.trim()} onClick={aiTranslate}>
+                {aiBusy === "translate" ? t("Переводим…") : `🇰🇿 ${t("Перевести на казахский (ИИ)")}`}
+              </button>
+            </div>
+            {(kk.tagline_kk || kk.about_kk) && (
+              <>
+                <input className="input" placeholder="Слоган (қазақша)" value={kk.tagline_kk} onChange={(e) => setKk({ ...kk, tagline_kk: e.target.value })} />
+                <textarea className="textarea" style={{ minHeight: 70 }} placeholder="Өзіңіз туралы (қазақша)" value={kk.about_kk} onChange={(e) => setKk({ ...kk, about_kk: e.target.value })} />
+              </>
+            )}
+            {modWarn && <span className="badge badge-pending">⚠ {t("ИИ-модерация")}: {modWarn}</span>}
+          </div>
+        )}
         <div className="field">
           <label className="label">{t("Теги (по ним вас найдут в фильтре)")}</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>

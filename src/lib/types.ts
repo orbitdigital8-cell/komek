@@ -43,6 +43,8 @@ export interface Specialist {
   created_at: string;
   response_minutes: number | null;
   response_count: number;
+  tagline_kk: string;
+  about_kk: string;
 }
 
 // Быстро отвечает: среднее время ответа ≤ 60 минут при ≥ 3 ответах
@@ -97,6 +99,53 @@ export interface Review {
   author_name: string;
   rating: number;
   text: string;
+  photos: string[];
+  created_at: string;
+}
+
+// ---- Биржа открытых заявок --------------------------------------------------
+export interface OpenRequest {
+  id: string;
+  client_id: string | null;
+  client_name: string;
+  professions: string[];
+  city: string;
+  event_date: string | null;
+  budget: number | null;
+  details: string;
+  status: "open" | "closed";
+  is_demo: boolean;
+  created_at: string;
+}
+
+export interface OpenRequestBid {
+  id: string;
+  request_id: string;
+  specialist_id: string;
+  price: number | null;
+  message: string;
+  created_at: string;
+}
+
+// ---- Пакеты услуг -----------------------------------------------------------
+export interface SpecialistPackage {
+  id: string;
+  specialist_id: string;
+  name: string;
+  price: number;
+  description: string;
+  sort_order: number;
+}
+
+// ---- Портфолио-кейсы --------------------------------------------------------
+export interface PortfolioCase {
+  id: string;
+  specialist_id: string;
+  title: string;
+  description: string;
+  photos: string[];
+  event_date: string | null;
+  sort_order: number;
   created_at: string;
 }
 

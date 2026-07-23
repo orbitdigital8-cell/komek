@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import Catalog from "@/components/Catalog";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import AiMatch from "@/components/AiMatch";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, type Lang } from "@/lib/i18n";
 import type { Profession, Specialist } from "@/lib/types";
@@ -69,6 +71,12 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ИИ-подбор команды (виден при наличии ANTHROPIC_API_KEY) */}
+      <AiMatch professions={(professions as Profession[]) ?? []} />
+
+      {/* Недавно просмотренные */}
+      <RecentlyViewed professions={(professions as Profession[]) ?? []} />
 
       {/* Каталог */}
       <section id="catalog" className="container" style={{ padding: "40px 22px 0" }}>

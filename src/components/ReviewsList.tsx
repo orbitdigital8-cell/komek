@@ -25,6 +25,16 @@ export default function ReviewsList({ reviews }: { reviews: Review[] }) {
             <span style={{ color: "var(--accent)", letterSpacing: 1 }}>{stars(r.rating)}</span>
           </div>
           {r.text && <p className="soft" style={{ fontSize: "0.92rem", margin: "8px 0 0" }}>{r.text}</p>}
+          {r.photos?.length > 0 && (
+            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              {r.photos.map((u, i) => (
+                <a key={i} href={u} target="_blank" rel="noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={u} alt="" style={{ width: 96, height: 72, objectFit: "cover", borderRadius: 8 }} loading="lazy" />
+                </a>
+              ))}
+            </div>
+          )}
           <div className="muted" style={{ fontSize: "0.76rem", marginTop: 8 }}>
             {new Date(r.created_at).toLocaleDateString(lang === "kk" ? "kk-KZ" : "ru-RU", { day: "numeric", month: "long", year: "numeric" })}
           </div>

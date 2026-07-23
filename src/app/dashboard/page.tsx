@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth";
 import { usePersona } from "@/lib/persona";
 import { useLang } from "@/lib/lang";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
+import PackagesEditor from "@/components/dashboard/PackagesEditor";
+import CasesEditor from "@/components/dashboard/CasesEditor";
 import IncomingRequests from "@/components/dashboard/IncomingRequests";
 import BusyDatesManager from "@/components/dashboard/BusyDatesManager";
 import DebugSpecialistCabinet from "@/components/DebugSpecialistCabinet";
@@ -122,14 +124,18 @@ export default function DashboardPage() {
       </div>
 
       {tab === "profile" ? (
-        <ProfileEditor
-          userId={user!.id}
-          professions={professions}
-          specialist={specialist}
-          contacts={contacts}
-          socials={socials}
-          onSaved={load}
-        />
+        <>
+          <ProfileEditor
+            userId={user!.id}
+            professions={professions}
+            specialist={specialist}
+            contacts={contacts}
+            socials={socials}
+            onSaved={load}
+          />
+          {specialist && <PackagesEditor specialistId={specialist.id} />}
+          {specialist && <CasesEditor specialistId={specialist.id} userId={user!.id} />}
+        </>
       ) : tab === "busy" ? (
         specialist ? (
           <BusyDatesManager specialistId={specialist.id} />

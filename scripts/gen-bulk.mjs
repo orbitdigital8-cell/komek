@@ -123,6 +123,8 @@ const specialists = [];
 const contacts = [];
 const socials = [];
 
+const specMeta = []; // {id, prof, price, city} — для пакетов/кейсов/биржи
+
 for (let i = 0; i < N; i++) {
   const prof = pick(bag);
   const c = P[prof];
@@ -149,6 +151,7 @@ for (let i = 0; i < N; i++) {
   const attrsSql = `'${esc(JSON.stringify(genAttrs(prof)))}'::jsonb`;
 
   specialists.push(`('${id}',NULL,'${prof}','${esc(name)}','${esc(city)}','${esc(tagline)}','${esc(about)}',${price},${exp},'${avatar}','${video}',${gallerySql},${tagsSql},${attrsSql},${rating},${verified},true)`);
+  specMeta.push({ id, prof, price, city });
 
   const ph = phone();
   const wa = chance(0.85) ? ph : "";
@@ -174,6 +177,67 @@ let sql = "-- Массовые демо-анкеты (сгенерировано
 sql += batchInsert("insert into public.specialists (id, owner_id, profession, name, city, tagline, about, price_from, experience_years, avatar_url, video_url, gallery, tags, attributes, rating, verified, is_demo) values", specialists);
 sql += batchInsert("insert into public.specialist_contacts (specialist_id, phone, whatsapp, telegram) values", contacts);
 sql += batchInsert("insert into public.specialist_socials (specialist_id, type, value, is_public, sort_order) values", socials);
+
+// ---- Пакеты услуг (~40% анкет) ----------------------------------------------
+const PKG_TIERS = [
+  ["Базовый", 1, "Минимум для небольшого события"],
+  ["Стандарт", 1.6, "Оптимальный вариант — выбирают чаще всего"],
+  ["Всё включено", 2.5, "Максимальная программа и полное сопровождение"],
+];
+const packages = [];
+for (const s of specMeta) {
+  if (!s.price || !chance(0.4)) continue;
+  PKG_TIERS.forEach(([nm, k, ds], j) => {
+    const pr = Math.round((s.price * k) / 5000) * 5000 || s.price;
+    packages.push(`('${s.id}','${nm}',${pr},'${ds}',${j})`);
+  });
+}
+
+// ---- Портфолио-кейсы (~25% анкет) -------------------------------------------
+const CASE_TITLES = ["Той на 200 гостей", "Кыз узату в ресторане", "Юбилей 50 лет", "Корпоратив компании", "Свадьба на 120 гостей"];
+const CASE_DESCS = ["Полное сопровождение от начала до конца.", "Гости остались в восторге.", "Организовали под ключ вместе с командой."];
+const cases = [];
+for (const s of specMeta) {
+  if (!chance(0.25)) continue;
+  const n = 1 + R(2);
+  for (let j = 0; j < n; j++) {
+    const kws = IMG_KW[s.prof] || ["event"];
+    const ph = Array.from({ length: 2 + R(2) }, (_, g) => `https://loremflickr.com/800/600/${kws[g % kws.length]}?lock=${9000 + cases.length * 7 + g}`);
+    const d = new Date(Date.now() - (30 + R(300)) * 864e5).toISOString().slice(0, 10);
+    cases.push(`('${s.id}','${esc(pick(CASE_TITLES))}','${esc(pick(CASE_DESCS))}',ARRAY[${ph.map((u) => `'${u}'`).join(",")}]::text[],'${d}',${j})`);
+  }
+}
+
+// ---- Биржа: демо-заявки + отклики -------------------------------------------
+const REQ_DETAILS = [
+  "Той на 100 гостей, ресторан в центре.",
+  "Кыз узату, нужен ведущий на два языка.",
+  "Юбилей мамы, 60 гостей, хотим душевно.",
+  "Свадьба, хотим всё красиво и без стресса.",
+  "Детский день рождения, 5 лет, дома.",
+];
+const REQ_NAMES = ["Айгерим", "Данияр", "Мадина", "Асель", "Тимур", "Гульнара"];
+const BID_MSGS = ["Свободен в эту дату, сделаем красиво!", "Готов обсудить детали, есть свои идеи.", "Большой опыт таких мероприятий — пишите!"];
+const openReqs = [];
+const openBids = [];
+for (let i = 0; i < 12; i++) {
+  const rid = randomUUID();
+  const profs = pickN(Object.keys(weights), 1 + R(3));
+  const cityR = pick(["Алматы", "Астана", "Шымкент", "Караганда"]);
+  const date = new Date(Date.now() + (7 + R(60)) * 864e5).toISOString().slice(0, 10);
+  const budget = (3 + R(15)) * 50000;
+  openReqs.push(`('${rid}',NULL,'${pick(REQ_NAMES)}',ARRAY[${profs.map((p) => `'${p}'`).join(",")}]::text[],'${cityR}','${date}',${budget},'${esc(pick(REQ_DETAILS))}','open',true)`);
+  // отклики от специалистов подходящих профессий
+  const fitting = specMeta.filter((s) => profs.includes(s.prof));
+  for (const s of pickN(fitting, Math.min(fitting.length, 1 + R(3)))) {
+    openBids.push(`('${rid}','${s.id}',${s.price ?? "NULL"},'${esc(pick(BID_MSGS))}')`);
+  }
+}
+
+sql += batchInsert("insert into public.specialist_packages (specialist_id, name, price, description, sort_order) values", packages);
+sql += batchInsert("insert into public.portfolio_cases (specialist_id, title, description, photos, event_date, sort_order) values", cases);
+sql += batchInsert("insert into public.open_requests (id, client_id, client_name, professions, city, event_date, budget, details, status, is_demo) values", openReqs);
+sql += batchInsert("insert into public.open_request_bids (request_id, specialist_id, price, message) values", openBids);
 
 // Скорость ответа: ~70% демо-анкет «отвечали» раньше, у половины — быстро (< часа)
 sql += `-- Демо-статистика: скорость ответа и просмотры анкет
