@@ -18,13 +18,16 @@ export default function IncomingRequests({ specialistId, onChange }: { specialis
 
   useEffect(() => { if (!openChat) refreshUnread(); }, [openChat, refreshUnread]);
 
+  const [busyDates, setBusyDates] = useState<Set<string>>(new Set());
+
   const load = useCallback(async () => {
-    const { data } = await sb
-      .from("contact_requests")
-      .select("*")
-      .eq("specialist_id", specialistId)
-      .order("created_at", { ascending: false });
+    const today = new Date().toISOString().slice(0, 10);
+    const [{ data }, { data: busyData }] = await Promise.all([
+      sb.from("contact_requests").select("*").eq("specialist_id", specialistId).order("created_at", { ascending: false }),
+      sb.from("specialist_busy").select("busy_date").eq("specialist_id", specialistId).gte("busy_date", today),
+    ]);
     setRows((data as ContactRequest[]) ?? []);
+    setBusyDates(new Set(((busyData as { busy_date: string }[]) ?? []).map((b) => b.busy_date)));
     setReady(true);
   }, [sb, specialistId]);
 
@@ -48,9 +51,15 @@ export default function IncomingRequests({ specialistId, onChange }: { specialis
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div style={{ minWidth: 0 }}>
               <strong style={{ fontSize: "1.05rem" }}>{r.client_name || t("Заказчик")}</strong>
-              <div className="muted" style={{ fontSize: "0.85rem", marginTop: 2 }}>
-                {r.event_date ? `📅 ${r.event_date}` : t("Дата не указана")}
-                {r.status === "accepted" && r.client_phone ? ` · 📞 ${r.client_phone}` : ""}
+              <div className="muted" style={{ fontSize: "0.85rem", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span>
+                  {r.event_date ? `📅 ${r.event_date}` : t("Дата не указана")}
+                  {r.status === "accepted" && r.client_phone ? ` · 📞 ${r.client_phone}` : ""}
+                </span>
+                {/* Конфликт: дата заявки уже занята (и это не её собственная бронь) */}
+                {r.event_date && busyDates.has(r.event_date) && r.status !== "booked" && r.status !== "completed" && (
+                  <span className="badge badge-declined">⚠ {t("эта дата уже занята")}</span>
+                )}
               </div>
               {r.message && <p className="soft" style={{ fontSize: "0.9rem", marginTop: 8, marginBottom: 0 }}>{r.message}</p>}
             </div>
@@ -65,7 +74,17 @@ export default function IncomingRequests({ specialistId, onChange }: { specialis
               </>
             )}
             {r.status === "accepted" && (
-              <button className="btn btn-primary btn-sm" disabled={busyId === r.id} onClick={() => setStatus(r.id, "booked")}>{t("📅 Забронировать")}{r.event_date ? ` · ${r.event_date}` : ""}</button>
+              <button
+                className="btn btn-primary btn-sm"
+                disabled={busyId === r.id}
+                onClick={() => {
+                  // Защита от двойной брони: дата уже занята → просим подтвердить
+                  if (r.event_date && busyDates.has(r.event_date) && !window.confirm(t("Эта дата уже отмечена занятой. Всё равно забронировать?"))) return;
+                  setStatus(r.id, "booked");
+                }}
+              >
+                {t("📅 Забронировать")}{r.event_date ? ` · ${r.event_date}` : ""}
+              </button>
             )}
             {r.status === "booked" && (
               <>
