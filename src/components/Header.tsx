@@ -80,7 +80,10 @@ export default function Header() {
         </span>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
-          <Link href="/orders" className="btn btn-ghost btn-sm">{t("Биржа")}</Link>
+          <Link href="/orders" className="btn btn-ghost btn-sm">
+            <span className="cta-full">{t("Подать заявку")}</span>
+            <span className="cta-short">{t("Заявка")}</span>
+          </Link>
           {ready && ids.length > 0 && (
             <Link href="/shortlist" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               ❤️ <span className="pill-count" style={{ background: "var(--brand)" }}>{ids.length}</span>

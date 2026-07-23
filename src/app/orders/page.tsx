@@ -182,8 +182,14 @@ export default function OrdersPage() {
     <div className="container-narrow" style={{ padding: "32px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 className="h2" style={{ marginBottom: 4 }}>{t("Биржа заказов")}</h1>
-          <p className="soft" style={{ margin: 0 }}>{t("Опишите, кто нужен на ваш той — свободные специалисты откликнутся сами.")}</p>
+          <h1 className="h2" style={{ marginBottom: 4 }}>
+            {asSpecialist ? t("Заявки от заказчиков") : t("Мне нужен специалист")}
+          </h1>
+          <p className="soft" style={{ margin: 0 }}>
+            {asSpecialist
+              ? t("Откликайтесь на подходящие заявки — клиент выберет и свяжется с вами.")
+              : t("Опишите, кто нужен на ваш той — свободные специалисты откликнутся сами.")}
+          </p>
         </div>
         {canCreate ? (
           <button className="btn btn-primary" onClick={() => setFormOpen((v) => !v)}>{formOpen ? t("Скрыть форму") : t("+ Разместить заявку")}</button>

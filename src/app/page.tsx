@@ -62,6 +62,9 @@ export default async function HomePage() {
               {t("Я специалист — разместить анкету")}
             </Link>
           </div>
+          <div style={{ marginTop: 14 }}>
+            <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
+          </div>
 
           {/* мини-доверие */}
           <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
