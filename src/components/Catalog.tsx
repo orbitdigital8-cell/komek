@@ -187,7 +187,7 @@ export default function Catalog({
       </div>
 
       {/* Поиск (с подсказками по тегам) + город + рейтинг + сортировка */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+      <div className="catalog-filters" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
         <div style={{ position: "relative", flex: "1 1 280px" }}>
           <input
             className="input"

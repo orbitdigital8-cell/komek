@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 // НИКОГДА не импортировать в клиентские компоненты: ключ не должен попасть в браузер.
 export function supabaseAdmin() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL_SERVER || process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );

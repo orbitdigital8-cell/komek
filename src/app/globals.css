@@ -402,4 +402,17 @@ button {
     padding: 7px 11px;
     font-size: 0.82rem;
   }
+  /* Фильтры каталога — на всю ширину, чтобы текст не обрезался */
+  .catalog-filters .select,
+  .catalog-filters .input {
+    flex: 1 1 100% !important;
+  }
+  /* Шапка профиля специалиста: аватар и имя не разъезжаются */
+  .profile-head {
+    align-items: flex-start !important;
+  }
+  .profile-head .avatar {
+    width: 56px !important;
+    height: 56px !important;
+  }
 }

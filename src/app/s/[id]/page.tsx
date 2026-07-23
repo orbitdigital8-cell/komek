@@ -66,7 +66,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
         {/* Левая колонка */}
         <div style={{ minWidth: 0 }}>
           {/* Шапка */}
-          <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 18 }}>
+          <div className="profile-head" style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 18 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={s.avatar_url} alt={s.name} className="avatar" style={{ width: 72, height: 72 }} />
             <div style={{ minWidth: 0 }}>

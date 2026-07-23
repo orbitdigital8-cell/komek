@@ -5,7 +5,9 @@ import { cookies } from "next/headers";
 export async function supabaseServer() {
   const cookieStore = await cookies();
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    // Серверные запросы идут с этого же ПК — для них можно задать отдельный
+    // адрес (127.0.0.1), когда NEXT_PUBLIC_… указывает на LAN/туннель для телефона.
+    process.env.SUPABASE_URL_SERVER || process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
