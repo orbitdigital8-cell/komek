@@ -190,7 +190,7 @@ export default function Catalog({
           <option value="">{t("Все города")}</option>
           {cities.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {t(c)}
             </option>
           ))}
         </select>

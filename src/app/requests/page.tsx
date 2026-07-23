@@ -88,7 +88,7 @@ export default function RequestsPage() {
                     {r.specialist?.name ?? t("Специалист")}
                   </Link>
                   <div className="muted" style={{ fontSize: "0.85rem" }}>
-                    📍 {r.specialist?.city}
+                    📍 {t(r.specialist?.city ?? "")}
                     {r.event_date ? ` · ${t("дата:")} ${r.event_date}` : ""}
                   </div>
                 </div>

@@ -101,13 +101,13 @@ export default function ShortlistPage() {
           {row(t("Рейтинг"), specialists, (s) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Stars rating={s.rating} />{s.review_count > 0 && <span className="muted" style={{ fontSize: "0.78rem" }}>({s.review_count})</span>}</span>, label, cell)}
           {row(t("Цена"), specialists, (s) => <strong style={{ color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>, label, cell)}
           {row(t("Опыт"), specialists, (s) => <span>{s.experience_years} {t("лет")}</span>, label, cell)}
-          {row(t("Город"), specialists, (s) => <span>📍 {s.city}</span>, label, cell)}
+          {row(t("Город"), specialists, (s) => <span>📍 {t(s.city)}</span>, label, cell)}
           {row(t("Видео-визитка"), specialists, (s) => (s.video_url ? <span style={{ color: "var(--good)" }}>▶ {t("есть")}</span> : <span className="muted">—</span>), label, cell)}
           {row(t("Занятость"), specialists, (s) => (busyCount[s.id] ? <span style={{ color: "var(--bad)" }}>{busyCount[s.id]} {t("занятых дат")}</span> : <span style={{ color: "var(--good)" }}>{t("свободен")}</span>), label, cell)}
           {row(t("Особенности"), specialists, (s) => (
             <span style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {s.tags.slice(0, 4).map((tg) => (
-                <span key={tg} style={{ fontSize: "0.72rem", color: "var(--text-mute)", background: "var(--surface-2)", padding: "2px 8px", borderRadius: 999 }}>#{tg}</span>
+                <span key={tg} style={{ fontSize: "0.72rem", color: "var(--text-mute)", background: "var(--surface-2)", padding: "2px 8px", borderRadius: 999 }}>#{t(tg)}</span>
               ))}
             </span>
           ), label, cell)}

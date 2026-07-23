@@ -53,16 +53,16 @@ export default function SpecialistCard({
           </span>
         </div>
         <div className="muted" style={{ fontSize: "0.85rem" }}>
-          📍 {s.city} · {t("опыт")} {s.experience_years} {t("лет")}
+          📍 {t(s.city)} · {t("опыт")} {s.experience_years} {t("лет")}
         </div>
         <p className="soft" style={{ fontSize: "0.9rem", margin: "2px 0 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-          {s.tagline}
+          {t(s.tagline)}
         </p>
         {s.tags.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
             {s.tags.slice(0, 3).map((tg) => (
               <span key={tg} style={{ fontSize: "0.72rem", color: "var(--text-mute)", background: "var(--surface-2)", padding: "2px 8px", borderRadius: 999 }}>
-                #{tg}
+                #{t(tg)}
               </span>
             ))}
           </div>

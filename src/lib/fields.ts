@@ -49,5 +49,5 @@ export function formatAttr(f: FieldDef, value: unknown, t: (s: string) => string
   if (value === undefined || value === null || value === "") return null;
   if (f.type === "bool") return value ? t("да") : null; // false/пусто не показываем
   if (f.type === "number") return `${value}${f.suffix ? " " + t(f.suffix) : ""}`;
-  return String(value);
+  return t(String(value)); // текстовые значения тоже переводим (словарь, иначе как есть)
 }

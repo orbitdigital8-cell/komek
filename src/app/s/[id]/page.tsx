@@ -10,7 +10,7 @@ import ReviewsList from "@/components/ReviewsList";
 import SocialLinks from "@/components/SocialLinks";
 import { supabaseServer } from "@/lib/supabase/server";
 import { fieldsFor, formatAttr } from "@/lib/fields";
-import { makeT, profName, type Lang } from "@/lib/i18n";
+import { makeT, profName, tText, type Lang } from "@/lib/i18n";
 import { formatDate, type BusyDate, type Profession, type Review, type Social, type Specialist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +78,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               </div>
               <div className="soft" style={{ marginTop: 4 }}>
                 <span className="badge badge-soft" style={{ marginRight: 8 }}>{p?.emoji} {profName(p, lang) || s.profession}</span>
-                📍 {s.city} · {t("опыт")} {s.experience_years} {t("лет")}
+                📍 {t(s.city)} · {t("опыт")} {s.experience_years} {t("лет")}
               </div>
             </div>
             <div style={{ marginLeft: "auto" }}>
@@ -121,13 +121,13 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
 
           <div style={{ marginTop: 22 }}>
             <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 8 }}>{t("О специалисте")}</h3>
-            <p style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>{s.about || s.tagline}</p>
+            <p style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>{tText(s.about || s.tagline, lang)}</p>
           </div>
 
           {s.tags.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 14 }}>
               {s.tags.map((tg) => (
-                <span key={tg} className="chip" style={{ cursor: "default", fontSize: "0.82rem" }}>#{tg}</span>
+                <span key={tg} className="chip" style={{ cursor: "default", fontSize: "0.82rem" }}>#{t(tg)}</span>
               ))}
             </div>
           )}
