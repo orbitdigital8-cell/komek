@@ -10,7 +10,7 @@ import ReviewsList from "@/components/ReviewsList";
 import SocialLinks from "@/components/SocialLinks";
 import { supabaseServer } from "@/lib/supabase/server";
 import { fieldsFor, formatAttr } from "@/lib/fields";
-import { makeT, profName, tText, type Lang } from "@/lib/i18n";
+import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
 import { formatDate, type BusyDate, type Profession, type Review, type Social, type Specialist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +78,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               </div>
               <div className="soft" style={{ marginTop: 4 }}>
                 <span className="badge badge-soft" style={{ marginRight: 8 }}>{p?.emoji} {profName(p, lang) || s.profession}</span>
-                📍 {t(s.city)} · {t("опыт")} {s.experience_years} {t("лет")}
+                📍 {t(s.city)} · {expLabel(s.experience_years, lang)}
               </div>
             </div>
             <div style={{ marginLeft: "auto" }}>

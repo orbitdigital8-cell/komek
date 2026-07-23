@@ -5,7 +5,7 @@ import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useShortlist } from "@/lib/shortlist";
 import { useLang } from "@/lib/lang";
-import { priceLabelL, profName } from "@/lib/i18n";
+import { priceLabelL, profName, yearsLabel } from "@/lib/i18n";
 import Stars from "@/components/Stars";
 import type { Profession, Specialist } from "@/lib/types";
 
@@ -100,7 +100,7 @@ export default function ShortlistPage() {
           {row(t("Специальность"), specialists, (s) => <span className="badge badge-soft">{profMap[s.profession]?.emoji} {profName(profMap[s.profession], lang) || s.profession}</span>, label, cell)}
           {row(t("Рейтинг"), specialists, (s) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Stars rating={s.rating} />{s.review_count > 0 && <span className="muted" style={{ fontSize: "0.78rem" }}>({s.review_count})</span>}</span>, label, cell)}
           {row(t("Цена"), specialists, (s) => <strong style={{ color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>, label, cell)}
-          {row(t("Опыт"), specialists, (s) => <span>{s.experience_years} {t("лет")}</span>, label, cell)}
+          {row(t("Стаж"), specialists, (s) => <span>{yearsLabel(s.experience_years, lang)}</span>, label, cell)}
           {row(t("Город"), specialists, (s) => <span>📍 {t(s.city)}</span>, label, cell)}
           {row(t("Видео-визитка"), specialists, (s) => (s.video_url ? <span style={{ color: "var(--good)" }}>▶ {t("есть")}</span> : <span className="muted">—</span>), label, cell)}
           {row(t("Занятость"), specialists, (s) => (busyCount[s.id] ? <span style={{ color: "var(--bad)" }}>{busyCount[s.id]} {t("занятых дат")}</span> : <span style={{ color: "var(--good)" }}>{t("свободен")}</span>), label, cell)}

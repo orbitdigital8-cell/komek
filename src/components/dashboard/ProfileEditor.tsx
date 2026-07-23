@@ -213,7 +213,7 @@ export default function ProfileEditor({ userId, professions, specialist, contact
             <input className="input" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
           </div>
           <div className="field">
-            <label className="label">{t("Опыт (лет)")}</label>
+            <label className="label">{t("Стаж (лет)")}</label>
             <input className="input" type="number" min={0} value={f.experience_years} onChange={(e) => setF({ ...f, experience_years: e.target.value })} />
           </div>
         </div>

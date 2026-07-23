@@ -4,7 +4,7 @@ import Link from "next/link";
 import Stars from "@/components/Stars";
 import ShortlistButton from "@/components/ShortlistButton";
 import { useLang } from "@/lib/lang";
-import { priceLabelL, profName } from "@/lib/i18n";
+import { expLabel, priceLabelL, profName } from "@/lib/i18n";
 import { type Profession, type Specialist } from "@/lib/types";
 
 export default function SpecialistCard({
@@ -53,7 +53,7 @@ export default function SpecialistCard({
           </span>
         </div>
         <div className="muted" style={{ fontSize: "0.85rem" }}>
-          📍 {t(s.city)} · {t("опыт")} {s.experience_years} {t("лет")}
+          📍 {t(s.city)} · {expLabel(s.experience_years, lang)}
         </div>
         <p className="soft" style={{ fontSize: "0.9rem", margin: "2px 0 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
           {t(s.tagline)}
