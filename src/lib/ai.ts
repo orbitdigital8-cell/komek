@@ -14,7 +14,9 @@ export function aiEnabled(): boolean {
   return provider() !== null;
 }
 
-const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+// 8b-instant: быстрая, с большим бесплатным дневным лимитом токенов.
+// Для более умного подбора можно задать GROQ_MODEL=llama-3.3-70b-versatile.
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
 // Единый вызов ИИ: принимает промпт, возвращает текст ответа.
