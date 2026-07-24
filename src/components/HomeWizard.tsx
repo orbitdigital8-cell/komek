@@ -12,8 +12,8 @@ const HOME_PROFS = ["nanny", "housekeeper", "cook", "driver"];
 
 const FREQ: { key: string; label: string; hint: string }[] = [
   { key: "разово", label: "Разово", hint: "На один раз или мероприятие" },
-  { key: "регулярно", label: "Несколько раз в неделю", hint: "Приходящий помощник" },
-  { key: "постоянно", label: "Постоянно, полный день", hint: "С проживанием или на весь день" },
+  { key: "регулярно", label: "Несколько раз в неделю", hint: "Приходящий помощник по графику" },
+  { key: "постоянно", label: "Постоянно, полный день", hint: "На весь день или с проживанием" },
 ];
 
 export default function HomeWizard({ professions, avg }: { professions: Profession[]; avg: Record<string, number> }) {
