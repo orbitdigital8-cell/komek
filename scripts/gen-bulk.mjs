@@ -2,6 +2,7 @@
 import { randomUUID } from "crypto";
 import { writeFileSync } from "fs";
 import { PKG_BY_PROF } from "./packages-data.mjs";
+import { CASE_BY_PROF } from "./cases-data.mjs";
 
 const N = 600;
 const R = (n) => Math.floor(Math.random() * n);
@@ -189,18 +190,17 @@ for (const s of specMeta) {
   });
 }
 
-// ---- Портфолио-кейсы (~25% анкет) -------------------------------------------
-const CASE_TITLES = ["Той на 200 гостей", "Кыз узату в ресторане", "Юбилей 50 лет", "Корпоратив компании", "Свадьба на 120 гостей"];
-const CASE_DESCS = ["Полное сопровождение от начала до конца.", "Гости остались в восторге, заказчик — тоже.", "Работали командой, всё прошло по таймингу.", "Отдали более 300 обработанных снимков.", "Клиенты потом рекомендовали нас друзьям."];
+// ---- Примеры работ по профессии (~25% анкет) --------------------------------
 const cases = [];
 for (const s of specMeta) {
-  if (!chance(0.25)) continue;
+  const cd = CASE_BY_PROF[s.prof];
+  if (!cd || !chance(0.25)) continue;
   const n = 1 + R(2);
   for (let j = 0; j < n; j++) {
     const kws = IMG_KW[s.prof] || ["event"];
     const ph = Array.from({ length: 2 + R(2) }, (_, g) => `https://loremflickr.com/800/600/${kws[g % kws.length]}?lock=${9000 + cases.length * 7 + g}`);
     const d = new Date(Date.now() - (30 + R(300)) * 864e5).toISOString().slice(0, 10);
-    cases.push(`('${s.id}','${esc(pick(CASE_TITLES))}','${esc(pick(CASE_DESCS))}',ARRAY[${ph.map((u) => `'${u}'`).join(",")}]::text[],'${d}',${j})`);
+    cases.push(`('${s.id}','${esc(pick(cd.titles))}','${esc(pick(cd.descs))}',ARRAY[${ph.map((u) => `'${u}'`).join(",")}]::text[],'${d}',${j})`);
   }
 }
 

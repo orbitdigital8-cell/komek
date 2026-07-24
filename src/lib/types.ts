@@ -45,11 +45,33 @@ export interface Specialist {
   response_count: number;
   tagline_kk: string;
   about_kk: string;
+  last_seen: string | null;
+  orders_count: number;
 }
 
 // Быстро отвечает: среднее время ответа ≤ 60 минут при ≥ 3 ответах
 export function isFastResponder(s: Pick<Specialist, "response_minutes" | "response_count">): boolean {
   return s.response_minutes != null && s.response_minutes <= 60 && s.response_count >= 3;
+}
+
+// Онлайн-статус: онлайн (< 5 мин), иначе «был N назад» (null — не показываем)
+export function onlineStatus(lastSeen: string | null): { online: boolean; text: string } | null {
+  if (!lastSeen) return null;
+  const mins = Math.floor((Date.now() - new Date(lastSeen).getTime()) / 60000);
+  if (mins < 5) return { online: true, text: "онлайн" };
+  if (mins < 60) return { online: false, text: `был ${mins} мин назад` };
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return { online: false, text: `был ${hrs} ч назад` };
+  const days = Math.floor(hrs / 24);
+  return { online: false, text: `был ${days} дн назад` };
+}
+
+// Уровень лояльности по числу выполненных заказов
+export function loyaltyLevel(orders: number): { label: string; emoji: string } | null {
+  if (orders >= 100) return { label: "Топ-мастер", emoji: "👑" };
+  if (orders >= 50) return { label: "Опытный мастер", emoji: "🏅" };
+  if (orders >= 10) return { label: "Проверенный", emoji: "⭐" };
+  return null;
 }
 
 export interface Message {
