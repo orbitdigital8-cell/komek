@@ -1,10 +1,6 @@
 import { cookies } from "next/headers";
-import Catalog from "@/components/Catalog";
-import RecentlyViewed from "@/components/RecentlyViewed";
-import SeasonalPicks from "@/components/SeasonalPicks";
-import TopSpecialists from "@/components/TopSpecialists";
 import HeroActions from "@/components/HeroActions";
-import AiMatch from "@/components/AiMatch";
+import HomeSections from "@/components/HomeSections";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, type Lang } from "@/lib/i18n";
 import type { Profession, Specialist } from "@/lib/types";
@@ -67,30 +63,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Топ специалистов — витрина лучших сразу под hero */}
-      <TopSpecialists professions={(professions as Profession[]) ?? []} />
-
-      {/* Сезонная подборка — ловим сезонный спрос */}
-      <SeasonalPicks professions={(professions as Profession[]) ?? []} month={new Date().getMonth()} />
-
-      {/* ИИ-подбор команды (виден при наличии ANTHROPIC_API_KEY) */}
-      <AiMatch professions={(professions as Profession[]) ?? []} />
-
-      {/* Недавно просмотренные */}
-      <RecentlyViewed professions={(professions as Profession[]) ?? []} />
-
-      {/* Каталог */}
-      <section id="catalog" className="container" style={{ padding: "40px 22px 0" }}>
-        <div style={{ marginBottom: 22 }}>
-          <h2 className="h2" style={{ marginBottom: 4 }}>{t("Каталог специалистов")}</h2>
-          <p className="soft">{t("Выберите раздел, специальность или просто напишите, что нужно.")}</p>
-        </div>
-        <Catalog
-          professions={(professions as Profession[]) ?? []}
-          initialSpecialists={(specialists as unknown as Specialist[]) ?? []}
-          initialCount={count ?? 0}
-        />
-      </section>
+      {/* Ниже — контент по роли: заказчику витрина+каталог, специалисту его заказы */}
+      <HomeSections
+        professions={(professions as Profession[]) ?? []}
+        initialSpecialists={(specialists as unknown as Specialist[]) ?? []}
+        initialCount={count ?? 0}
+        month={new Date().getMonth()}
+      />
     </>
   );
 }

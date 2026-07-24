@@ -4,14 +4,21 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/lang";
 
-// Вторая CTA на главной зависит от того, кто смотрит:
-// гость — «стать специалистом», заказчик — «подать заявку», специалист — «моя анкета».
+// CTA на главной зависит от роли: гость — каталог + «стать специалистом»,
+// заказчик — каталог, специалист — его кабинет (каталог для него скрыт).
 export default function HeroActions() {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const { t } = useLang();
 
-  // Гостю показываем призыв стать специалистом; вошедшим действия уже есть в шапке —
-  // не дублируем, оставляем только «Смотреть каталог».
+  if (!loading && role === "specialist") {
+    return (
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <Link href="/dashboard" className="btn btn-primary">{t("Мой кабинет")}</Link>
+        <Link href="/orders" className="btn btn-outline">{t("Заказы на бирже")}</Link>
+      </div>
+    );
+  }
+
   const second = !loading && !user
     ? <Link href="/register?role=specialist" className="btn btn-outline">{t("Я специалист — разместить анкету")}</Link>
     : null;
