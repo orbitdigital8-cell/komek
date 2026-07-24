@@ -144,6 +144,7 @@ export interface PortfolioCase {
   title: string;
   description: string;
   photos: string[];
+  videos: string[];
   event_date: string | null;
   sort_order: number;
   created_at: string;

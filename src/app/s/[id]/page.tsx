@@ -180,11 +180,14 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
                       {c.event_date && <span className="muted" style={{ fontSize: "0.82rem" }}>{formatDate(c.event_date, true)}</span>}
                     </div>
                     {c.description && <p className="soft" style={{ fontSize: "0.9rem", margin: "6px 0 0" }}>{tText(c.description, lang)}</p>}
-                    {c.photos.length > 0 && (
+                    {(c.photos.length > 0 || c.videos?.length > 0) && (
                       <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                         {c.photos.map((u, i) => (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img key={i} src={u} alt="" style={{ width: 130, height: 92, objectFit: "cover", borderRadius: 10 }} loading="lazy" />
+                          <img key={`p${i}`} src={u} alt="" style={{ width: 130, height: 92, objectFit: "cover", borderRadius: 10 }} loading="lazy" />
+                        ))}
+                        {(c.videos ?? []).map((u, i) => (
+                          <video key={`v${i}`} src={u} controls preload="metadata" style={{ width: 164, height: 92, objectFit: "cover", borderRadius: 10, background: "#000" }} />
                         ))}
                       </div>
                     )}

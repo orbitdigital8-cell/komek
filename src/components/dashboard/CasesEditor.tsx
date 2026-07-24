@@ -5,18 +5,20 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useLang } from "@/lib/lang";
 import { formatDate, type PortfolioCase } from "@/lib/types";
 
-// Портфолио-кейсы: альбомы «Свадьба Айгерим и Армана» с фото.
+type Draft = { title: string; description: string; date: string; photos: string[]; videos: string[] };
+const EMPTY: Draft = { title: "", description: "", date: "", photos: [], videos: [] };
+
+// Портфолио-примеры работ: альбомы «Свадьба Айгерим и Армана» с фото и видео.
 // adminSpecialistId — режим отладки: чтение/запись через админский API (обход RLS).
 export default function CasesEditor({ specialistId, userId, adminSpecialistId }: { specialistId: string; userId: string; adminSpecialistId?: string }) {
   const sb = supabaseBrowser();
   const { t } = useLang();
   const [rows, setRows] = useState<PortfolioCase[]>([]);
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [date, setDate] = useState("");
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [editId, setEditId] = useState<string | null>(null); // null = добавление нового
   const [busy, setBusy] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     if (adminSpecialistId) {
@@ -31,39 +33,68 @@ export default function CasesEditor({ specialistId, userId, adminSpecialistId }:
 
   useEffect(() => { load(); }, [load]);
 
-  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+  async function uploadOne(file: File): Promise<string | null> {
+    if (adminSpecialistId) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("specialistId", adminSpecialistId);
+      const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const j = await r.json();
+      return r.ok ? (j.url as string) : null;
+    }
+    const ext = file.name.split(".").pop() || "bin";
+    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await sb.storage.from("media").upload(path, file);
+    return error ? null : sb.storage.from("media").getPublicUrl(path).data.publicUrl;
+  }
+
+  async function onPhotos(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     setBusy(true);
     for (const file of files) {
-      if (adminSpecialistId) {
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("specialistId", adminSpecialistId);
-        const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
-        const j = await r.json();
-        if (r.ok) setPhotos((p) => [...p, j.url as string]);
-      } else {
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-        const { error } = await sb.storage.from("media").upload(path, file);
-        if (!error) setPhotos((p) => [...p, sb.storage.from("media").getPublicUrl(path).data.publicUrl]);
-      }
+      const url = await uploadOne(file);
+      if (url) setDraft((d) => ({ ...d, photos: [...d.photos, url] }));
     }
     setBusy(false);
+    e.target.value = "";
   }
 
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
+  async function onVideos(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     setBusy(true);
+    const url = await uploadOne(file);
+    if (url) setDraft((d) => ({ ...d, videos: [...d.videos, url] }));
+    setBusy(false);
+    e.target.value = "";
+  }
+
+  function startEdit(c: PortfolioCase) {
+    setEditId(c.id);
+    setDraft({ title: c.title, description: c.description, date: c.event_date ?? "", photos: c.photos ?? [], videos: c.videos ?? [] });
+    window.scrollTo({ top: window.scrollY, behavior: "smooth" });
+  }
+
+  function cancelEdit() {
+    setEditId(null);
+    setDraft(EMPTY);
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!draft.title.trim()) return;
+    setBusy(true);
+    const payload = { title: draft.title.trim(), description: draft.description.trim(), photos: draft.photos, videos: draft.videos, event_date: draft.date || null };
+
     if (adminSpecialistId) {
-      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_case", specialistId: adminSpecialistId, title: title.trim(), description: desc.trim(), photos, event_date: date || null, sort_order: rows.length }) });
+      const action = editId ? "update_case" : "add_case";
+      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, specialistId: adminSpecialistId, id: editId, sort_order: rows.length, ...payload }) });
+    } else if (editId) {
+      await sb.from("portfolio_cases").update(payload).eq("id", editId);
     } else {
-      await sb.from("portfolio_cases").insert({
-        specialist_id: specialistId, title: title.trim(), description: desc.trim(), photos, event_date: date || null, sort_order: rows.length,
-      });
+      await sb.from("portfolio_cases").insert({ specialist_id: specialistId, sort_order: rows.length, ...payload });
     }
-    setTitle(""); setDesc(""); setDate(""); setPhotos([]);
+    cancelEdit();
     setBusy(false);
     load();
   }
@@ -74,6 +105,7 @@ export default function CasesEditor({ specialistId, userId, adminSpecialistId }:
     } else {
       await sb.from("portfolio_cases").delete().eq("id", id);
     }
+    if (editId === id) cancelEdit();
     load();
   }
 
@@ -84,43 +116,69 @@ export default function CasesEditor({ specialistId, userId, adminSpecialistId }:
         {t("Расскажите о конкретных мероприятиях: «Той на 200 гостей, ресторан X» — с фото. Реальные примеры продают лучше слов.")}
       </p>
 
+      {/* Существующие примеры */}
       {rows.map((c) => (
-        <div key={c.id} style={{ padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)" }}>
+        <div key={c.id} style={{ padding: "10px 12px", borderRadius: 10, background: editId === c.id ? "var(--surface)" : "var(--surface-2)", border: editId === c.id ? "1px solid var(--brand)" : "1px solid transparent" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <strong>{c.title}</strong>
             {c.event_date && <span className="muted" style={{ fontSize: "0.82rem" }}>{formatDate(c.event_date, true)}</span>}
-            <button type="button" className="btn btn-ghost btn-sm" style={{ marginLeft: "auto", padding: "3px 9px" }} onClick={() => remove(c.id)}>×</button>
+            <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+              <button type="button" className="btn btn-outline btn-sm" style={{ padding: "3px 9px" }} onClick={() => startEdit(c)}>✏ {t("Изменить")}</button>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ padding: "3px 9px" }} onClick={() => remove(c.id)}>×</button>
+            </span>
           </div>
           {c.description && <p className="soft" style={{ fontSize: "0.85rem", margin: "6px 0 0" }}>{c.description}</p>}
-          {c.photos.length > 0 && (
+          {(c.photos.length > 0 || c.videos?.length > 0) && (
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
               {c.photos.map((u, i) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img key={i} src={u} alt="" style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 6 }} />
+              ))}
+              {(c.videos ?? []).map((u, i) => (
+                <span key={i} style={{ width: 72, height: 54, borderRadius: 6, background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>▶</span>
               ))}
             </div>
           )}
         </div>
       ))}
 
-      <form onSubmit={add} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* Форма добавления / редактирования */}
+      <form onSubmit={save} style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 4 }}>
+        {editId && <span className="badge badge-soft" style={{ alignSelf: "flex-start" }}>✏ {t("Редактирование примера")}</span>}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input className="input" placeholder={t("Название (Той на 200 гостей)")} value={title} onChange={(e) => setTitle(e.target.value)} style={{ flex: "2 1 200px" }} />
-          <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: "0 1 150px" }} />
+          <input className="input" placeholder={t("Название (Той на 200 гостей)")} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} style={{ flex: "2 1 200px" }} />
+          <input className="input" type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} style={{ flex: "0 1 150px" }} />
         </div>
-        <input className="input" placeholder={t("Что делали, чем гордитесь")} value={desc} onChange={(e) => setDesc(e.target.value)} />
-        {photos.length > 0 && (
+        <input className="input" placeholder={t("Что делали, чем гордитесь")} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+
+        {/* Превью медиа черновика с удалением */}
+        {(draft.photos.length > 0 || draft.videos.length > 0) && (
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {photos.map((u, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={u} alt="" style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 6 }} />
+            {draft.photos.map((u, i) => (
+              <span key={`p${i}`} style={{ position: "relative" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt="" style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 6 }} />
+                <button type="button" onClick={() => setDraft((d) => ({ ...d, photos: d.photos.filter((_, j) => j !== i) }))} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: 11 }}>×</button>
+              </span>
+            ))}
+            {draft.videos.map((u, i) => (
+              <span key={`v${i}`} style={{ position: "relative" }}>
+                <span style={{ width: 72, height: 54, borderRadius: 6, background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>▶</span>
+                <button type="button" onClick={() => setDraft((d) => ({ ...d, videos: d.videos.filter((_, j) => j !== i) }))} style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,.6)", color: "#fff", cursor: "pointer", fontSize: 11 }}>×</button>
+              </span>
             ))}
           </div>
         )}
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => fileInput.current?.click()} disabled={busy}>{t("+ Фото")}</button>
-          <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={onPick} />
-          <button className="btn btn-primary btn-sm" disabled={busy || !title.trim()}>{t("Добавить пример")}</button>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => photoInput.current?.click()} disabled={busy}>📷 {t("+ Фото")}</button>
+          <input ref={photoInput} type="file" accept="image/*" multiple hidden onChange={onPhotos} />
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => videoInput.current?.click()} disabled={busy}>🎬 {t("+ Видео")}</button>
+          <input ref={videoInput} type="file" accept="video/*" hidden onChange={onVideos} />
+          <button className="btn btn-primary btn-sm" disabled={busy || !draft.title.trim()}>
+            {busy ? t("Сохраняем…") : editId ? t("Сохранить изменения") : t("Добавить пример")}
+          </button>
+          {editId && <button type="button" className="btn btn-ghost btn-sm" onClick={cancelEdit}>{t("Отмена")}</button>}
         </div>
       </form>
     </div>

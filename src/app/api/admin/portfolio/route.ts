@@ -34,8 +34,15 @@ export async function POST(req: Request) {
 
   if (b.action === "add_case") {
     const { error } = await sb.from("portfolio_cases").insert({
-      specialist_id: sid, title: b.title, description: b.description ?? "", photos: b.photos ?? [], event_date: b.event_date || null, sort_order: b.sort_order ?? 0,
+      specialist_id: sid, title: b.title, description: b.description ?? "", photos: b.photos ?? [], videos: b.videos ?? [], event_date: b.event_date || null, sort_order: b.sort_order ?? 0,
     });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+  if (b.action === "update_case") {
+    const { error } = await sb.from("portfolio_cases")
+      .update({ title: b.title, description: b.description ?? "", photos: b.photos ?? [], videos: b.videos ?? [], event_date: b.event_date || null })
+      .eq("id", b.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
