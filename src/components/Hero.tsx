@@ -21,13 +21,9 @@ export default function Hero({ lang }: { lang: Lang }) {
           {name ? `${t("С возвращением")}, ` : t("С возвращением")}
           {name && <span className="gradient-text">{name}</span>}!
         </h1>
-        <p className="lead" style={{ maxWidth: 560, margin: "0 auto 28px" }}>
+        <p className="lead" style={{ maxWidth: 560, margin: "0 auto" }}>
           {t("Заявки, заказы с биржи и статистика — всё в одном месте. Не пропускайте новых клиентов.")}
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/dashboard" className="btn btn-primary">{t("Мой кабинет")}</Link>
-          <Link href="/orders" className="btn btn-outline">{t("Заказы на бирже")}</Link>
-        </div>
       </div>
     );
   }
