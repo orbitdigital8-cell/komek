@@ -13,12 +13,18 @@ export default function BudgetCalc({ professions, avg }: { professions: Professi
   const [sel, setSel] = useState<Set<string>>(new Set(["tamada", "photographer", "singer"]));
   const [guests, setGuests] = useState(100);
 
-  // «Найти под этот бюджет» → ИИ-подбор с готовым запросом из выбора калькулятора
+  // ✨ ИИ-подбор с готовым запросом из выбора калькулятора
   function goToAi() {
     const names = [...sel].map((id) => profName(professions.find((p) => p.id === id), lang)).filter(Boolean).join(", ");
     const query = `Нужны: ${names}. Гостей: ${guests}. Бюджет: ${total.toLocaleString("ru-RU")} ₸.`;
     try { sessionStorage.setItem("komek_ai_query", query); } catch { /* ignore */ }
     router.push("/match");
+  }
+
+  // 📋 Разместить заявку на бирже с предзаполненными категориями и бюджетом
+  function goToOrders() {
+    try { sessionStorage.setItem("komek_calc", JSON.stringify({ profs: [...sel], budget: total, guests })); } catch { /* ignore */ }
+    router.push("/orders");
   }
 
   // Только профессии, для которых есть средняя цена
@@ -70,6 +76,7 @@ export default function BudgetCalc({ professions, avg }: { professions: Professi
               {t("Это ориентир по средним ценам. Точную стоимость уточняйте у специалистов.")}
             </p>
             <button onClick={goToAi} className="btn btn-primary btn-block" style={{ marginTop: 8 }}>✨ {t("Подобрать команду ИИ")}</button>
+            <button onClick={goToOrders} className="btn btn-outline btn-block" style={{ marginTop: 8 }}>📋 {t("Разместить заявку")}</button>
           </div>
         )}
       </div>

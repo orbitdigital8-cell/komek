@@ -73,6 +73,20 @@ export default function OrdersPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Пришли из калькулятора «Разместить заявку» → открываем форму с предвыбором
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("komek_calc");
+      if (!raw) return;
+      sessionStorage.removeItem("komek_calc");
+      const d = JSON.parse(raw) as { profs?: string[]; budget?: number; guests?: number };
+      if (d.profs?.length) setSelProfs(d.profs);
+      if (d.budget) setBudget(String(d.budget));
+      if (d.guests) setDetails(`${d.guests} гостей.`);
+      setFormOpen(true);
+    } catch { /* ignore */ }
+  }, []);
+
   // Анкета текущего специалиста (для отклика)
   useEffect(() => {
     (async () => {
