@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Catalog from "@/components/Catalog";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SeasonalPicks from "@/components/SeasonalPicks";
+import TopSpecialists from "@/components/TopSpecialists";
 import HeroActions from "@/components/HeroActions";
 import AiMatch from "@/components/AiMatch";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -65,6 +66,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Топ специалистов — витрина лучших сразу под hero */}
+      <TopSpecialists professions={(professions as Profession[]) ?? []} />
 
       {/* Сезонная подборка — ловим сезонный спрос */}
       <SeasonalPicks professions={(professions as Profession[]) ?? []} month={new Date().getMonth()} />
