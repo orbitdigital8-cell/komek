@@ -20,10 +20,28 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://komek.pages.dev";
+
 export const metadata: Metadata = {
-  title: "Kömek — специалисты для мероприятий и дома",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Kömek — специалисты для тоя, праздника и дома",
+    template: "%s | Kömek",
+  },
   description:
-    "Kömek — каталог тамада, ведущих, аниматоров, диджеев, фотографов, а также нянь, домработниц и водителей. Найдите нужного специалиста для тоя, праздника или дома.",
+    "Kömek — каталог тамада, ведущих, аниматоров, певцов, фотографов, а также нянь, домработниц, поваров и водителей. Найдите и подберите специалиста для тоя, праздника или дома в Казахстане.",
+  keywords: ["тамада", "той", "ведущий", "аниматор", "фотограф на той", "няня", "домработница", "повар на выезд", "водитель", "Kömek", "Казахстан", "Алматы", "Астана"],
+  applicationName: "Kömek",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "Kömek",
+    locale: "ru_KZ",
+    url: SITE_URL,
+    title: "Kömek — специалисты для тоя, праздника и дома",
+    description: "Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы, повара и водители — для дома. Видео-визитки, отзывы, прямой контакт.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
