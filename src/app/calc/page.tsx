@@ -1,15 +1,15 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import ToiWizard from "@/components/ToiWizard";
 import BudgetCalc from "@/components/BudgetCalc";
-import AiMatch from "@/components/AiMatch";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, type Lang } from "@/lib/i18n";
 import type { Profession } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Калькулятор бюджета тоя | Kömek",
-  description: "Прикиньте примерную смету тоя: выберите нужных специалистов и число гостей — покажем ориентировочную стоимость по средним ценам каталога.",
+  title: "Конструктор тоя — смета по шагам | Kömek",
+  description: "Соберите свой той по шагам: тамада, музыка, звук, фото, декор и торт. По каждому этапу укажите бюджет — покажем итоговую смету и подберём команду.",
 };
 
 export default async function CalcPage() {
@@ -34,15 +34,19 @@ export default async function CalcPage() {
 
   return (
     <div className="container-narrow" style={{ padding: "36px 20px" }}>
-      <h1 className="h1" style={{ fontSize: "2rem", marginBottom: 6 }}>🧮 {t("Калькулятор бюджета тоя")}</h1>
+      <h1 className="h1" style={{ fontSize: "2rem", marginBottom: 6 }}>🎉 {t("Конструктор тоя")}</h1>
       <p className="lead" style={{ marginBottom: 24 }}>
-        {t("Выберите, кто нужен на праздник — покажем примерную смету по средним ценам каталога.")}
+        {t("Соберите свой той по шагам: тамада, музыка, звук, фото, декор… По каждому этапу укажите бюджет — в конце покажем смету и подберём команду.")}
       </p>
-      <BudgetCalc professions={(profs as Profession[]) ?? []} avg={avg} />
 
-      {/* ИИ-помощник: опиши событие — соберём команду (виден при подключённом ИИ) */}
-      <div style={{ marginTop: 8 }}>
-        <AiMatch professions={(profs as Profession[]) ?? []} />
+      {/* Главное: пошаговый конструктор */}
+      <ToiWizard professions={(profs as Profession[]) ?? []} avg={avg} />
+
+      {/* Альтернатива: быстрый выбор списком для тех, кто уже знает, кто нужен */}
+      <div style={{ marginTop: 40 }}>
+        <h2 className="h2" style={{ fontSize: "1.25rem", marginBottom: 4 }}>{t("Или выберите сразу списком")}</h2>
+        <p className="soft" style={{ marginBottom: 16 }}>{t("Уже знаете, кто нужен? Отметьте специалистов — покажем примерную смету.")}</p>
+        <BudgetCalc professions={(profs as Profession[]) ?? []} avg={avg} />
       </div>
     </div>
   );
