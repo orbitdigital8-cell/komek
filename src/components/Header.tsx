@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useShortlist } from "@/lib/shortlist";
 import { useLang } from "@/lib/lang";
 import NotifBell from "@/components/NotifBell";
+import AiNavLink from "@/components/AiNavLink";
 
 export default function Header() {
   const { user, role, name, loading, signOut } = useAuth();
@@ -79,6 +80,7 @@ export default function Header() {
         </span>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <AiNavLink />
           <Link href="/orders" className="btn btn-ghost btn-sm">
             {role === "specialist" ? (
               <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import SpecialistCard from "@/components/SpecialistCard";
 import { useLang } from "@/lib/lang";
@@ -24,17 +24,11 @@ export default function AiMatch({ professions }: { professions: Profession[] }) 
     fetch("/api/ai/status").then((r) => r.json()).then((d) => setEnabled(!!d.enabled)).catch(() => {});
   }, []);
 
-  if (!enabled) return null;
-
-  const profMap: Record<string, Profession> = {};
-  for (const p of professions) profMap[p.id] = p;
-
-  async function run(e: React.FormEvent) {
-    e.preventDefault();
-    if (!q.trim()) return;
+  const runQuery = useCallback(async (query: string) => {
+    if (!query.trim()) return;
     setBusy(true); setErr(null); setIntro(""); setPicks([]); setCards([]);
     try {
-      const r = await fetch("/api/ai/match", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: q }) });
+      const r = await fetch("/api/ai/match", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error ?? "error");
       setIntro(d.intro ?? "");
@@ -53,7 +47,23 @@ export default function AiMatch({ professions }: { professions: Profession[] }) 
       setErr(t("Не получилось подобрать — попробуйте ещё раз."));
     }
     setBusy(false);
-  }
+  }, [sb, t]);
+
+  function run(e: React.FormEvent) { e.preventDefault(); runQuery(q); }
+
+  // Автозапуск: пришли из калькулятора с готовым запросом
+  useEffect(() => {
+    if (!enabled) return;
+    try {
+      const pre = sessionStorage.getItem("komek_ai_query");
+      if (pre) { sessionStorage.removeItem("komek_ai_query"); setQ(pre); runQuery(pre); }
+    } catch { /* ignore */ }
+  }, [enabled, runQuery]);
+
+  if (!enabled) return null;
+
+  const profMap: Record<string, Profession> = {};
+  for (const p of professions) profMap[p.id] = p;
 
   const reasonById: Record<string, string> = {};
   for (const p of picks) reasonById[p.id] = p.reason;
