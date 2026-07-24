@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import SpecialistCard from "@/components/SpecialistCard";
+import TeamBuilder from "@/components/TeamBuilder";
 import { useLang } from "@/lib/lang";
 import type { Profession, Specialist } from "@/lib/types";
 
@@ -91,14 +91,7 @@ export default function AiMatch({ professions }: { professions: Profession[] }) 
         {err && <div className="badge badge-declined" style={{ marginTop: 12 }}>{err}</div>}
         {intro && <p style={{ marginTop: 14, marginBottom: 0, lineHeight: 1.55 }}>{intro}</p>}
         {cards.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16, marginTop: 16 }}>
-            {cards.map((s) => (
-              <div key={s.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <SpecialistCard s={s} prof={profMap[s.profession]} />
-                {reasonById[s.id] && <span className="muted" style={{ fontSize: "0.82rem", padding: "0 4px" }}>💡 {reasonById[s.id]}</span>}
-              </div>
-            ))}
-          </div>
+          <TeamBuilder key={cards.map((c) => c.id).join(",")} initial={cards} professions={profMap} reasonById={reasonById} />
         )}
       </div>
     </section>
