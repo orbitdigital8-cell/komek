@@ -60,9 +60,9 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
 
   return (
     <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-      <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Кейсы — примеры работ")}</h3>
+      <h3 className="h2" style={{ fontSize: "1.1rem", margin: 0 }}>{t("Примеры работ")}</h3>
       <p className="soft" style={{ fontSize: "0.85rem", margin: 0 }}>
-        {t("Расскажите о конкретных мероприятиях: «Той на 200 гостей, ресторан X» — с фото. Кейсы продают лучше слов.")}
+        {t("Расскажите о конкретных мероприятиях: «Той на 200 гостей, ресторан X» — с фото. Реальные примеры продают лучше слов.")}
       </p>
 
       {rows.map((c) => (
@@ -86,7 +86,7 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
 
       <form onSubmit={add} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input className="input" placeholder={t("Название кейса (Той на 200 гостей)")} value={title} onChange={(e) => setTitle(e.target.value)} style={{ flex: "2 1 200px" }} />
+          <input className="input" placeholder={t("Название (Той на 200 гостей)")} value={title} onChange={(e) => setTitle(e.target.value)} style={{ flex: "2 1 200px" }} />
           <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: "0 1 150px" }} />
         </div>
         <input className="input" placeholder={t("Что делали, чем гордитесь")} value={desc} onChange={(e) => setDesc(e.target.value)} />
@@ -99,9 +99,9 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
           </div>
         )}
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" className="btn btn-outline btn-sm" onClick={() => fileInput.current?.click()} disabled={busy}>{t("+ Фото кейса")}</button>
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => fileInput.current?.click()} disabled={busy}>{t("+ Фото")}</button>
           <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={onPick} />
-          <button className="btn btn-primary btn-sm" disabled={busy || !title.trim()}>{t("Добавить кейс")}</button>
+          <button className="btn btn-primary btn-sm" disabled={busy || !title.trim()}>{t("Добавить пример")}</button>
         </div>
       </form>
     </div>

@@ -171,7 +171,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
           {/* Портфолио-кейсы */}
           {cases.length > 0 && (
             <div style={{ marginTop: 22 }}>
-              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 10 }}>🏆 {t("Кейсы")}</h3>
+              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 10 }}>🏆 {t("Примеры работ")}</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {cases.map((c) => (
                   <div key={c.id} className="card card-pad">
