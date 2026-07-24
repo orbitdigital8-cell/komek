@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const { data: s } = await sb.from("specialists").select("owner_id").eq("id", r.specialist_id).maybeSingle();
     if (s?.owner_id) {
       await notifyUsers([s.owner_id], {
-        title: "Новая заявка на связь",
+        type: "request", title: "Новая заявка на связь",
         body: `${r.client_name || "Заказчик"}${r.event_date ? ` · ${r.event_date}` : ""} ждёт подтверждения`,
         url: `${APP}/dashboard`,
       });
@@ -34,10 +34,10 @@ export async function POST(req: Request) {
     if (!r) return NextResponse.json({ ok: false });
     if (fromRole === "client") {
       const { data: s } = await sb.from("specialists").select("owner_id, name").eq("id", r.specialist_id).maybeSingle();
-      if (s?.owner_id) await notifyUsers([s.owner_id], { title: "Новое сообщение", body: `${r.client_name || "Заказчик"} написал вам`, url: `${APP}/dashboard` });
+      if (s?.owner_id) await notifyUsers([s.owner_id], { type: "message", title: "Новое сообщение", body: `${r.client_name || "Заказчик"} написал вам`, url: `${APP}/dashboard` });
     } else {
       const { data: s } = await sb.from("specialists").select("name").eq("id", r.specialist_id).maybeSingle();
-      await notifyUsers([r.client_id], { title: "Новое сообщение", body: `${s?.name || "Специалист"} ответил вам`, url: `${APP}/requests` });
+      await notifyUsers([r.client_id], { type: "message", title: "Новое сообщение", body: `${s?.name || "Специалист"} ответил вам`, url: `${APP}/requests` });
     }
     return NextResponse.json({ ok: true });
   }
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const owners = await ownersByProfessions(r.professions as string[]);
     if (owners.length) {
       await notifyUsers(owners, {
-        title: "Новый заказ на бирже",
+        type: "openrequest", title: "Новый заказ на бирже",
         body: `Клиент ищет специалиста${r.city ? ` · ${r.city}` : ""}${r.event_date ? ` · ${r.event_date}` : ""}. Откликнитесь!`,
         url: `${APP}/orders`,
       });
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   // Клиент выбрал отклик специалиста на бирже
   if (type === "pick") {
     const { data: sp } = await sb.from("specialists").select("owner_id").eq("id", id).maybeSingle();
-    if (sp?.owner_id) await notifyUsers([sp.owner_id], { title: "Вас выбрали на бирже!", body: "Заказчик выбрал ваш отклик — ждёт связи.", url: `${APP}/dashboard` });
+    if (sp?.owner_id) await notifyUsers([sp.owner_id], { type: "pick", title: "Вас выбрали на бирже!", body: "Заказчик выбрал ваш отклик — ждёт связи.", url: `${APP}/dashboard` });
     return NextResponse.json({ ok: true });
   }
 

@@ -8,7 +8,7 @@ if (VAPID_PUB && VAPID_PRIV) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:info@komek.kz", VAPID_PUB, VAPID_PRIV);
 }
 
-type Payload = { title: string; body: string; url: string };
+type Payload = { title: string; body: string; url: string; type?: string };
 
 async function sendTelegram(chatId: string, text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -20,10 +20,18 @@ async function sendTelegram(chatId: string, text: string) {
   }).catch(() => {});
 }
 
-// Рассылает уведомление списку пользователей по их включённым каналам.
+// Рассылает уведомление списку пользователей: всегда в личный кабинет (in-app),
+// плюс во включённые внешние каналы (браузер, Telegram).
 export async function notifyUsers(userIds: string[], p: Payload) {
   if (!userIds.length) return;
   const sb = supabaseAdmin();
+
+  // 1) In-app: пишем в «Уведомления» кабинета каждому — работает всегда
+  await sb.from("notifications").insert(
+    userIds.map((uid) => ({ user_id: uid, type: p.type ?? "info", title: p.title, body: p.body, url: p.url })),
+  );
+
+  // 2) Внешние каналы — только тем, кто их включил
   const { data } = await sb.from("notification_prefs").select("*").in("user_id", userIds);
   for (const pref of (data as {
     user_id: string; web_push: webpush.PushSubscription | null; web_enabled: boolean;
