@@ -42,6 +42,10 @@ export default function OrdersPage() {
   const [bidPrice, setBidPrice] = useState("");
   const [bidMsg, setBidMsg] = useState("");
 
+  // Фильтр по специальности
+  const [fProf, setFProf] = useState<string>("");
+  const [fInit, setFInit] = useState(false);
+
   const profMap = useMemo(() => {
     const m: Record<string, Profession> = {};
     for (const p of professions) m[p.id] = p;
@@ -180,6 +184,20 @@ export default function OrdersPage() {
   const isMine = (r: OpenRequest) => !!clientId && r.client_id === clientId;
   const canBid = (r: OpenRequest) => asSpecialist && !!mySpecialist && r.professions.includes(mySpecialist.profession);
 
+  // Специалисту по умолчанию показываем заявки его специальности
+  useEffect(() => {
+    if (!fInit && mySpecialist) { setFProf(mySpecialist.profession); setFInit(true); }
+  }, [mySpecialist, fInit]);
+
+  // Специальности, встречающиеся в открытых заявках — для чипов-фильтра
+  const profsInFeed = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of requests) r.professions.forEach((p) => set.add(p));
+    return professions.filter((p) => set.has(p.id));
+  }, [requests, professions]);
+
+  const shownRequests = fProf ? requests.filter((r) => r.professions.includes(fProf)) : requests;
+
   if (!ready) return <div className="container" style={{ padding: 48 }} />;
 
   return (
@@ -242,12 +260,26 @@ export default function OrdersPage() {
         </form>
       )}
 
+      {/* Фильтр по специальности */}
+      {profsInFeed.length > 1 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
+          <button className={`chip ${!fProf ? "chip-active" : ""}`} onClick={() => setFProf("")}>{t("Все специальности")}</button>
+          {profsInFeed.map((p) => (
+            <button key={p.id} className={`chip ${fProf === p.id ? "chip-active" : ""}`} onClick={() => setFProf(p.id)}>
+              {p.emoji} {profName(p, lang)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Лента заявок */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 22 }}>
-        {requests.length === 0 && (
-          <div className="card card-pad" style={{ textAlign: "center", color: "var(--text-mute)" }}>{t("Открытых заявок пока нет.")}</div>
+        {shownRequests.length === 0 && (
+          <div className="card card-pad" style={{ textAlign: "center", color: "var(--text-mute)" }}>
+            {fProf ? t("Нет заявок по этой специальности.") : t("Открытых заявок пока нет.")}
+          </div>
         )}
-        {requests.map((r) => {
+        {shownRequests.map((r) => {
           const rBids = bids[r.id] ?? [];
           return (
             <div key={r.id} className="card card-pad">

@@ -216,9 +216,12 @@ const REQ_NAMES = ["Айгерим", "Данияр", "Мадина", "Асель
 const BID_MSGS = ["Свободен в эту дату, сделаем красиво!", "Готов обсудить детали, есть свои идеи.", "Большой опыт таких мероприятий — пишите!"];
 const openReqs = [];
 const openBids = [];
-for (let i = 0; i < 12; i++) {
+// Гарантируем заявку по каждой профессии (+ иногда мультикатегорию), чтобы у любого
+// специалиста были заказы для отклика.
+const reqProfSets = Object.keys(weights).map((p) => (chance(0.3) ? pickN(Object.keys(weights).filter((x) => x !== p).concat(p), 2 + R(2)).concat(p) : [p]));
+for (let i = 0; i < reqProfSets.length; i++) {
   const rid = randomUUID();
-  const profs = pickN(Object.keys(weights), 1 + R(3));
+  const profs = [...new Set(reqProfSets[i])];
   const cityR = pick(["Алматы", "Астана", "Шымкент", "Караганда"]);
   const date = new Date(Date.now() + (7 + R(60)) * 864e5).toISOString().slice(0, 10);
   const budget = (3 + R(15)) * 50000;
