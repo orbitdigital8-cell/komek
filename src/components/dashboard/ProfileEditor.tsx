@@ -327,12 +327,15 @@ export default function ProfileEditor({ userId, professions, specialist, contact
           <textarea className="textarea" value={f.about} onChange={(e) => setF({ ...f, about: e.target.value })} />
         </div>
 
-        {/* ИИ-инструменты (видны при наличии ANTHROPIC_API_KEY) */}
+        {/* ИИ-инструменты (бесплатный ИИ платформы — доступен всегда) */}
         {aiOn && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <span className="muted" style={{ fontSize: "0.8rem" }}>
+              {f.about.trim().length >= 40 ? t("ИИ отполирует ваше описание и подберёт теги — бесплатно.") : t("Не знаете, что писать? ИИ красиво заполнит «о себе» по вашей профессии — бесплатно.")}
+            </span>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" className="btn btn-outline btn-sm" disabled={aiBusy !== ""} onClick={aiAssist}>
-                {aiBusy === "assist" ? t("Пишем…") : `✨ ${t("Улучшить описание (ИИ)")}`}
+              <button type="button" className="btn btn-primary btn-sm" disabled={aiBusy !== ""} onClick={aiAssist}>
+                {aiBusy === "assist" ? t("Пишем…") : f.about.trim().length >= 40 ? `✨ ${t("Улучшить описание (ИИ)")}` : `✨ ${t("Заполнить о себе (ИИ)")}`}
               </button>
               <button type="button" className="btn btn-outline btn-sm" disabled={aiBusy !== "" || !f.about.trim()} onClick={aiTranslate}>
                 {aiBusy === "translate" ? t("Переводим…") : `🇰🇿 ${t("Перевести на казахский (ИИ)")}`}
