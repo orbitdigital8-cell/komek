@@ -79,8 +79,11 @@ export async function POST(req: Request) {
 
   // Если клиент назвал конкретные профессии — подаём ИИ ТОЛЬКО их (он не сможет добавить чужих)
   const wanted = detectProfessions(query);
-  const teamMode = TEAM_SIGNALS.some((s) => query.toLowerCase().includes(s));
-  const restrict = wanted.length > 0 && !teamMode;
+  // Команда, если явный сигнал ИЛИ перечислено 3+ разных профессий (конструктор тоя даёт список)
+  const teamMode = TEAM_SIGNALS.some((s) => query.toLowerCase().includes(s)) || wanted.length >= 3;
+  // Ограничиваем каталог названными профессиями (и для одиночного запроса, и для команды из списка)
+  const filterToWanted = wanted.length > 0;
+  const restrict = filterToWanted && !teamMode; // «покажи побольше вариантов одной профессии»
   const city = detectCity(query); // на один той нужны специалисты из одного города
 
   // Бытовые исключаем только в командном подборе и если клиент их не называл явно
@@ -91,10 +94,12 @@ export async function POST(req: Request) {
       .from("specialists")
       .select("id, profession, name, city, price_from, rating, review_count")
       .eq("published", true);
-    if (restrict) cat = cat.in("profession", wanted);
+    if (filterToWanted) cat = cat.in("profession", wanted);
     if (excludeHousehold) cat = cat.not("profession", "in", `(${HOUSEHOLD.join(",")})`);
     if (withCity && city) cat = cat.eq("city", city);
-    const { data } = await cat.order("rating", { ascending: false }).limit(restrict ? 25 : 80);
+    // Команда из многих профессий — берём больше строк, чтобы на каждую хватило кандидатов
+    const rows = restrict ? 25 : filterToWanted ? Math.min(120, wanted.length * 12) : 80;
+    const { data } = await cat.order("rating", { ascending: false }).limit(rows);
     return (data as { id: string; profession: string; name: string; city: string; price_from: number | null; rating: number; review_count: number }[]) ?? [];
   }
 
@@ -117,8 +122,9 @@ ${compact.join("\n")}
 - Собирай команду из РАЗНЫХ профессий ТОЛЬКО если клиент явно просит команду / «собрать той» / «весь праздник» / перечисляет несколько услуг. Для команды можно давать по 1-2 варианта на каждую профессию.
 ${city ? `ГОРОД: мероприятие в городе ${city}. Все специалисты команды ДОЛЖНЫ быть из одного города ${city} — на один той нельзя собрать людей из разных городов.` : ""}
 СТРОГО ПО БЮДЖЕТУ: если бюджет назван, сумма цен «от» выбранных НЕ должна превышать бюджет. Если денег не хватает — включи только самых важных в рамках бюджета и честно напиши в intro, что осталось за рамками. Лучше уложиться в бюджет, чем превысить.
-Не выдумывай id. Верни ТОЛЬКО JSON без markdown и пояснений: {"intro": "1-2 предложения по-русски", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
-    1200,
+Не выдумывай id. reason — коротко, до 8 слов. Верни ТОЛЬКО JSON без markdown и пояснений: {"intro": "1-2 предложения по-русски", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
+    1600,
+    true, // строгий JSON-режим
   );
 
   const json = extractJson<{ intro: string; picks: { id: string; reason: string }[] }>(text);
@@ -132,7 +138,7 @@ ${city ? `ГОРОД: мероприятие в городе ${city}. Все с�
   json.picks = (json.picks ?? []).filter((p) => {
     const s = byId.get(p.id);
     if (!s) return false;
-    if (restrict && !wanted.includes(s.profession)) return false;
+    if (filterToWanted && !wanted.includes(s.profession)) return false;
     if (city && cityOk && s.city !== city) return false;
     return true;
   });
