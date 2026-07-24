@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
+import PackagesEditor from "@/components/dashboard/PackagesEditor";
+import CasesEditor from "@/components/dashboard/CasesEditor";
 import BrandIcon from "@/components/BrandIcon";
 import Chat from "@/components/Chat";
 import { formatDate, priceLabel, STATUS_BADGE, STATUS_LABEL, type BusyDate, type ContactRequest, type Profession, type RequestStatus, type Social, type Specialist, type SpecialistContacts } from "@/lib/types";
@@ -65,15 +67,19 @@ export default function DebugSpecialistCabinet({ specialistId }: { specialistId:
       </div>
 
       {editing ? (
-        <ProfileEditor
-          userId="admin"
-          adminSpecialistId={sp.id}
-          professions={professions}
-          specialist={sp}
-          contacts={contacts}
-          socials={socials}
-          onSaved={load}
-        />
+        <>
+          <ProfileEditor
+            userId="admin"
+            adminSpecialistId={sp.id}
+            professions={professions}
+            specialist={sp}
+            contacts={contacts}
+            socials={socials}
+            onSaved={load}
+          />
+          <PackagesEditor specialistId={sp.id} adminSpecialistId={sp.id} />
+          <CasesEditor specialistId={sp.id} userId="admin" adminSpecialistId={sp.id} />
+        </>
       ) : (
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.4fr) minmax(0,1fr)", gap: 16 }} className="editor-grid">
         {/* Входящие заявки */}

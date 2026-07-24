@@ -5,8 +5,9 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useLang } from "@/lib/lang";
 import type { SpecialistPackage } from "@/lib/types";
 
-// Пакеты услуг: «Базовый / Стандарт / Всё включено» с ценой и описанием
-export default function PackagesEditor({ specialistId }: { specialistId: string }) {
+// Пакеты услуг: «Базовый / Стандарт / Всё включено» с ценой и описанием.
+// adminSpecialistId — режим отладки: чтение/запись через админский API (обход RLS).
+export default function PackagesEditor({ specialistId, adminSpecialistId }: { specialistId: string; adminSpecialistId?: string }) {
   const sb = supabaseBrowser();
   const { t } = useLang();
   const [rows, setRows] = useState<SpecialistPackage[]>([]);
@@ -16,9 +17,15 @@ export default function PackagesEditor({ specialistId }: { specialistId: string 
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
+    if (adminSpecialistId) {
+      const r = await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "list", specialistId: adminSpecialistId }) });
+      const d = await r.json();
+      setRows((d.packages as SpecialistPackage[]) ?? []);
+      return;
+    }
     const { data } = await sb.from("specialist_packages").select("*").eq("specialist_id", specialistId).order("sort_order");
     setRows((data as SpecialistPackage[]) ?? []);
-  }, [sb, specialistId]);
+  }, [sb, specialistId, adminSpecialistId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -26,20 +33,24 @@ export default function PackagesEditor({ specialistId }: { specialistId: string 
     e.preventDefault();
     if (!name.trim() || !price) return;
     setBusy(true);
-    await sb.from("specialist_packages").insert({
-      specialist_id: specialistId,
-      name: name.trim(),
-      price: parseInt(price, 10),
-      description: desc.trim(),
-      sort_order: rows.length,
-    });
+    if (adminSpecialistId) {
+      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_package", specialistId: adminSpecialistId, name: name.trim(), price: parseInt(price, 10), description: desc.trim(), sort_order: rows.length }) });
+    } else {
+      await sb.from("specialist_packages").insert({
+        specialist_id: specialistId, name: name.trim(), price: parseInt(price, 10), description: desc.trim(), sort_order: rows.length,
+      });
+    }
     setName(""); setPrice(""); setDesc("");
     setBusy(false);
     load();
   }
 
   async function remove(id: string) {
-    await sb.from("specialist_packages").delete().eq("id", id);
+    if (adminSpecialistId) {
+      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "del_package", specialistId: adminSpecialistId, id }) });
+    } else {
+      await sb.from("specialist_packages").delete().eq("id", id);
+    }
     load();
   }
 

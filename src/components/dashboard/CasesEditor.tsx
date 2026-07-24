@@ -5,8 +5,9 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useLang } from "@/lib/lang";
 import { formatDate, type PortfolioCase } from "@/lib/types";
 
-// Портфолио-кейсы: альбомы «Свадьба Айгерим и Армана» с фото
-export default function CasesEditor({ specialistId, userId }: { specialistId: string; userId: string }) {
+// Портфолио-кейсы: альбомы «Свадьба Айгерим и Армана» с фото.
+// adminSpecialistId — режим отладки: чтение/запись через админский API (обход RLS).
+export default function CasesEditor({ specialistId, userId, adminSpecialistId }: { specialistId: string; userId: string; adminSpecialistId?: string }) {
   const sb = supabaseBrowser();
   const { t } = useLang();
   const [rows, setRows] = useState<PortfolioCase[]>([]);
@@ -18,9 +19,15 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
   const fileInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
+    if (adminSpecialistId) {
+      const r = await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "list", specialistId: adminSpecialistId }) });
+      const d = await r.json();
+      setRows((d.cases as PortfolioCase[]) ?? []);
+      return;
+    }
     const { data } = await sb.from("portfolio_cases").select("*").eq("specialist_id", specialistId).order("sort_order");
     setRows((data as PortfolioCase[]) ?? []);
-  }, [sb, specialistId]);
+  }, [sb, specialistId, adminSpecialistId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -28,10 +35,19 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
     const files = Array.from(e.target.files ?? []);
     setBusy(true);
     for (const file of files) {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await sb.storage.from("media").upload(path, file);
-      if (!error) setPhotos((p) => [...p, sb.storage.from("media").getPublicUrl(path).data.publicUrl]);
+      if (adminSpecialistId) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("specialistId", adminSpecialistId);
+        const r = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const j = await r.json();
+        if (r.ok) setPhotos((p) => [...p, j.url as string]);
+      } else {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await sb.storage.from("media").upload(path, file);
+        if (!error) setPhotos((p) => [...p, sb.storage.from("media").getPublicUrl(path).data.publicUrl]);
+      }
     }
     setBusy(false);
   }
@@ -40,21 +56,24 @@ export default function CasesEditor({ specialistId, userId }: { specialistId: st
     e.preventDefault();
     if (!title.trim()) return;
     setBusy(true);
-    await sb.from("portfolio_cases").insert({
-      specialist_id: specialistId,
-      title: title.trim(),
-      description: desc.trim(),
-      photos,
-      event_date: date || null,
-      sort_order: rows.length,
-    });
+    if (adminSpecialistId) {
+      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_case", specialistId: adminSpecialistId, title: title.trim(), description: desc.trim(), photos, event_date: date || null, sort_order: rows.length }) });
+    } else {
+      await sb.from("portfolio_cases").insert({
+        specialist_id: specialistId, title: title.trim(), description: desc.trim(), photos, event_date: date || null, sort_order: rows.length,
+      });
+    }
     setTitle(""); setDesc(""); setDate(""); setPhotos([]);
     setBusy(false);
     load();
   }
 
   async function remove(id: string) {
-    await sb.from("portfolio_cases").delete().eq("id", id);
+    if (adminSpecialistId) {
+      await fetch("/api/admin/portfolio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "del_case", specialistId: adminSpecialistId, id }) });
+    } else {
+      await sb.from("portfolio_cases").delete().eq("id", id);
+    }
     load();
   }
 
