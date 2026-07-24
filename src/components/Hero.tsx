@@ -47,12 +47,12 @@ export default function Hero({ lang }: { lang: Lang }) {
       <p className="lead" style={{ maxWidth: 600, margin: "0 auto 28px" }}>
         {t("Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители — для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.")}
       </p>
-      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-        <a href="#catalog" className="btn btn-primary">{t("Смотреть каталог")}</a>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", alignItems: "center" }}>
+        <a href="#services" className="btn btn-primary btn-lg" style={{ fontSize: "1.05rem", padding: "14px 28px", boxShadow: "0 8px 24px rgba(147,51,234,.32)" }}>✨ {t("Подобрать по шагам")}</a>
+        <a href="#catalog" className="btn btn-outline">{t("Смотреть каталог")}</a>
         {second}
       </div>
       <div style={{ marginTop: 14, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-        <a href="#services" className="link" style={{ fontSize: "0.92rem" }}>✨ {t("Подобрать по шагам")}</a>
         <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
       </div>
 
