@@ -243,6 +243,7 @@ export default function OrdersPage() {
             <div className="field">
               <label className="label">{t("Бюджет (₸, на всё)")}</label>
               <input className="input" type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} />
+              <Link href="/calc" className="link" style={{ fontSize: "0.78rem", marginTop: 4, display: "inline-block" }}>🧮 {t("Не знаете сумму? Прикиньте на калькуляторе")}</Link>
             </div>
           </div>
           <div className="field">
