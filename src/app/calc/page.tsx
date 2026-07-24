@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import BudgetCalc from "@/components/BudgetCalc";
+import AiMatch from "@/components/AiMatch";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, type Lang } from "@/lib/i18n";
 import type { Profession } from "@/lib/types";
@@ -38,6 +39,11 @@ export default async function CalcPage() {
         {t("Выберите, кто нужен на праздник — покажем примерную смету по средним ценам каталога.")}
       </p>
       <BudgetCalc professions={(profs as Profession[]) ?? []} avg={avg} />
+
+      {/* ИИ-помощник: опиши событие — соберём команду (виден при подключённом ИИ) */}
+      <div style={{ marginTop: 8 }}>
+        <AiMatch professions={(profs as Profession[]) ?? []} />
+      </div>
     </div>
   );
 }
