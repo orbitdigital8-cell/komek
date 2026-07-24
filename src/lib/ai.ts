@@ -1,18 +1,31 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
 
-// ИИ-фичи включаются, когда в .env.local задан ANTHROPIC_API_KEY
+// ИИ-функции платформы для пользователей — на бесплатном Google Gemini.
+// (Разработку ведём отдельно через Claude Code; в самой платформе Anthropic не используется.)
+
 export function aiEnabled(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.GEMINI_API_KEY;
 }
 
-export function aiClient(): Anthropic {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-}
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
-// Быстрая модель для перевода/текстов; для подбора команды можно задать AI_MODEL_SMART
-export const AI_MODEL = process.env.AI_MODEL ?? "claude-haiku-4-5-20251001";
-export const AI_MODEL_SMART = process.env.AI_MODEL_SMART ?? "claude-sonnet-5";
+// Единый вызов ИИ: принимает промпт, возвращает текст ответа.
+export async function aiComplete(prompt: string, maxTokens = 800): Promise<string> {
+  if (!process.env.GEMINI_API_KEY) return "";
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+      }),
+    },
+  );
+  const d = await r.json();
+  return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+}
 
 // Достаём JSON из ответа модели (на случай пояснений вокруг)
 export function extractJson<T>(text: string): T | null {

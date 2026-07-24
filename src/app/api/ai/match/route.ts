@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { aiClient, aiEnabled, AI_MODEL_SMART, extractJson } from "@/lib/ai";
+import { aiComplete, aiEnabled, extractJson } from "@/lib/ai";
 import { supabaseAdmin, adminEnabled } from "@/lib/supabase/admin";
 import { createClient } from "@supabase/supabase-js";
 
@@ -28,12 +28,8 @@ export async function POST(req: Request) {
     price_from: number | null; rating: number; review_count: number; tags: string[]; tagline: string;
   }[]) ?? []).map((s) => `${s.id}|${s.profession}|${s.name}|${s.city}|${s.price_from ?? "?"}₸|★${s.rating}(${s.review_count})|${s.tagline}`);
 
-  const msg = await aiClient().messages.create({
-    model: AI_MODEL_SMART,
-    max_tokens: 900,
-    messages: [{
-      role: "user",
-      content: `Ты — подбор команды на маркетплейсе Kömek (Казахстан: тои, праздники, домашние услуги).
+  const text = await aiComplete(
+    `Ты — подбор команды на маркетплейсе Kömek (Казахстан: тои, праздники, домашние услуги).
 Запрос клиента: «${String(query).slice(0, 500)}»
 
 Каталог (id|профессия|имя|город|цена от|рейтинг|слоган), по одному в строке:
@@ -41,10 +37,9 @@ ${compact.join("\n")}
 
 Подбери 2-6 подходящих специалистов (профессии — под задачу; город клиента важен; уложись в бюджет, если назван). Не выдумывай id.
 Ответ строго JSON: {"intro": "1-2 тёплых предложения по-русски, почему такой состав", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
-    }],
-  });
+    900,
+  );
 
-  const text = msg.content.find((b) => b.type === "text")?.text ?? "";
   const json = extractJson<{ intro: string; picks: { id: string; reason: string }[] }>(text);
   if (!json) return NextResponse.json({ error: "bad ai response" }, { status: 500 });
   return NextResponse.json(json);
