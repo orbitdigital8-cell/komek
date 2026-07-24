@@ -52,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <Link href="/c/animator" className="link" style={{ color: "var(--text-mute)" }}>{t("Аниматор на детский праздник")}</Link>
                 <Link href="/c/nanny" className="link" style={{ color: "var(--text-mute)" }}>{t("Няня на мероприятие")}</Link>
                 <Link href="/c/pyro" className="link" style={{ color: "var(--text-mute)" }}>{t("Салют и фейерверк")}</Link>
-                <Link href="/calc" className="link" style={{ color: "var(--text-mute)" }}>{t("Калькулятор бюджета тоя")}</Link>
+                <Link href="/calc" className="link" style={{ color: "var(--text-mute)" }}>{t("Собрать той по шагам")}</Link>
                 <Link href="/how" className="link" style={{ color: "var(--text-mute)" }}>{t("Как это работает")}</Link>
               </div>
             </VisitorOnly>
