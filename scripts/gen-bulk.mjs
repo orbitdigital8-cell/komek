@@ -1,6 +1,7 @@
 // Генератор массовых демо-анкет (1500) для Kömek. Пишет supabase/seed_bulk.sql.
 import { randomUUID } from "crypto";
 import { writeFileSync } from "fs";
+import { PKG_BY_PROF } from "./packages-data.mjs";
 
 const N = 600;
 const R = (n) => Math.floor(Math.random() * n);
@@ -178,18 +179,13 @@ sql += batchInsert("insert into public.specialists (id, owner_id, profession, na
 sql += batchInsert("insert into public.specialist_contacts (specialist_id, phone, whatsapp, telegram) values", contacts);
 sql += batchInsert("insert into public.specialist_socials (specialist_id, type, value, is_public, sort_order) values", socials);
 
-// ---- Пакеты услуг (~40% анкет) ----------------------------------------------
-const PKG_TIERS = [
-  ["Базовый", 1, "Минимум для небольшого события"],
-  ["Стандарт", 1.6, "Оптимальный вариант — выбирают чаще всего"],
-  ["Всё включено", 2.5, "Максимальная программа и полное сопровождение"],
-];
+// ---- Пакеты услуг по профессии (~40% анкет) ---------------------------------
 const packages = [];
 for (const s of specMeta) {
-  if (!s.price || !chance(0.4)) continue;
-  PKG_TIERS.forEach(([nm, k, ds], j) => {
-    const pr = Math.round((s.price * k) / 5000) * 5000 || s.price;
-    packages.push(`('${s.id}','${nm}',${pr},'${ds}',${j})`);
+  const tiers = PKG_BY_PROF[s.prof];
+  if (!tiers || !chance(0.4)) continue;
+  tiers.forEach(([nm, pr, ds], j) => {
+    packages.push(`('${s.id}','${esc(nm)}',${pr},'${esc(ds)}',${j})`);
   });
 }
 
