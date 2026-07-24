@@ -250,9 +250,11 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
             </VisitorOnly>
           )}
 
-          <div style={{ marginTop: 20, marginBottom: 8 }}>
-            <ReportButton specialistId={s.id} />
-          </div>
+          <VisitorOnly>
+            <div style={{ marginTop: 20, marginBottom: 8 }}>
+              <ReportButton specialistId={s.id} />
+            </div>
+          </VisitorOnly>
         </div>
 
         {/* Правая колонка — контакты */}
