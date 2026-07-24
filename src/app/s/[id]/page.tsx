@@ -14,6 +14,7 @@ import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
 import ReportButton from "@/components/ReportButton";
 import ViewTracker from "@/components/ViewTracker";
 import SpecialistCard from "@/components/SpecialistCard";
+import VisitorOnly from "@/components/VisitorOnly";
 import { formatDate, isFastResponder, loyaltyLevel, onlineStatus, type BusyDate, type PortfolioCase, type Profession, type Review, type Social, type Specialist, type SpecialistPackage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -235,16 +236,18 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
             <ReviewsList reviews={reviews} />
           </div>
 
-          {/* Похожие специалисты */}
+          {/* Похожие специалисты — только заказчику/гостю (специалисту не показываем конкурентов) */}
           {similar.length > 0 && (
-            <div style={{ marginTop: 26 }}>
-              <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 12 }}>{t("Похожие специалисты")}</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
-                {similar.map((sp) => (
-                  <SpecialistCard key={sp.id} s={sp} prof={p ?? undefined} />
-                ))}
+            <VisitorOnly>
+              <div style={{ marginTop: 26 }}>
+                <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 12 }}>{t("Похожие специалисты")}</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+                  {similar.map((sp) => (
+                    <SpecialistCard key={sp.id} s={sp} prof={p ?? undefined} />
+                  ))}
+                </div>
               </div>
-            </div>
+            </VisitorOnly>
           )}
 
           <div style={{ marginTop: 20, marginBottom: 8 }}>
