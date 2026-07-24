@@ -1,30 +1,60 @@
 import "server-only";
 
-// ИИ-функции платформы для пользователей — на бесплатном Google Gemini.
-// (Разработку ведём отдельно через Claude Code; в самой платформе Anthropic не используется.)
+// ИИ-функции платформы для пользователей — на бесплатном провайдере.
+// Приоритет: Groq (бесплатно, работает в КЗ) → Gemini (если доступен в регионе).
+// Разработку ведём через Claude Code отдельно; Anthropic в платформе не используется.
 
-export function aiEnabled(): boolean {
-  return !!process.env.GEMINI_API_KEY;
+function provider(): "groq" | "gemini" | null {
+  if (process.env.GROQ_API_KEY) return "groq";
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  return null;
 }
 
+export function aiEnabled(): boolean {
+  return provider() !== null;
+}
+
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
 
 // Единый вызов ИИ: принимает промпт, возвращает текст ответа.
 export async function aiComplete(prompt: string, maxTokens = 800): Promise<string> {
-  if (!process.env.GEMINI_API_KEY) return "";
-  const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
+  const p = provider();
+
+  if (p === "groq") {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+        model: GROQ_MODEL,
+        max_tokens: maxTokens,
+        temperature: 0.7,
+        messages: [{ role: "user", content: prompt }],
       }),
-    },
-  );
-  const d = await r.json();
-  return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    });
+    const d = await r.json();
+    if (!r.ok) { console.error("Groq error:", JSON.stringify(d).slice(0, 300)); return ""; }
+    return d?.choices?.[0]?.message?.content ?? "";
+  }
+
+  if (p === "gemini") {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
+        }),
+      },
+    );
+    const d = await r.json();
+    if (!r.ok) { console.error("Gemini error:", JSON.stringify(d).slice(0, 300)); return ""; }
+    return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  }
+
+  return "";
 }
 
 // Достаём JSON из ответа модели (на случай пояснений вокруг)
