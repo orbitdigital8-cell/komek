@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { usePersona } from "@/lib/persona";
@@ -16,6 +17,7 @@ export default function OrdersPage() {
   const { user, role } = useAuth();
   const persona = usePersona();
   const { lang, t } = useLang();
+  const router = useRouter();
 
   const debugOn = persona.ready && persona.active;
   const asClient = debugOn ? persona.role === "client" : role === "client";
@@ -27,6 +29,19 @@ export default function OrdersPage() {
   const [bids, setBids] = useState<Record<string, BidRow[]>>({});
   const [mySpecialist, setMySpecialist] = useState<Specialist | null>(null);
   const [ready, setReady] = useState(false);
+  const [aiOn, setAiOn] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/ai/status").then((r) => r.json()).then((d) => setAiOn(!!d.enabled)).catch(() => {});
+  }, []);
+
+  // Отдать выбор из формы ИИ-подбору команды
+  function goToAiFromForm() {
+    const names = selProfs.map((id) => profName(professions.find((p) => p.id === id), lang)).filter(Boolean).join(", ");
+    const parts = [names && `Нужны: ${names}.`, city && `Город: ${city}.`, budget && `Бюджет: ${Number(budget).toLocaleString("ru-RU")} ₸.`, details].filter(Boolean);
+    try { sessionStorage.setItem("komek_ai_query", parts.join(" ")); } catch { /* ignore */ }
+    router.push("/match");
+  }
 
   // Форма создания
   const [formOpen, setFormOpen] = useState(false);
@@ -250,7 +265,15 @@ export default function OrdersPage() {
             <label className="label">{t("Детали")}</label>
             <textarea className="textarea" placeholder={t("Например: кыз узату на 80 гостей, ресторан «Алтын», нужен ведущий на два языка…")} value={details} onChange={(e) => setDetails(e.target.value)} />
           </div>
-          <button className="btn btn-primary" disabled={busy || selProfs.length === 0} style={{ alignSelf: "flex-start" }}>{t("Опубликовать заявку")}</button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <button className="btn btn-primary" disabled={busy || selProfs.length === 0}>{t("Опубликовать заявку")}</button>
+            {aiOn && (
+              <button type="button" className="btn btn-outline" disabled={selProfs.length === 0} onClick={goToAiFromForm}>✨ {t("Или подобрать команду ИИ")}</button>
+            )}
+          </div>
+          <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>
+            {t("Опубликовать — специалисты откликнутся сами. ИИ — сразу соберёт команду из каталога.")}
+          </p>
         </form>
       )}
 
