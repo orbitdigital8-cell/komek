@@ -42,8 +42,6 @@ export default function OrdersPage() {
   const [bidPrice, setBidPrice] = useState("");
   const [bidMsg, setBidMsg] = useState("");
 
-  // Фильтр по специальности (для заказчика)
-  const [fProf, setFProf] = useState<string>("");
 
   const profMap = useMemo(() => {
     const m: Record<string, Profession> = {};
@@ -183,20 +181,15 @@ export default function OrdersPage() {
   const isMine = (r: OpenRequest) => !!clientId && r.client_id === clientId;
   const canBid = (r: OpenRequest) => asSpecialist && !!mySpecialist && r.professions.includes(mySpecialist.profession);
 
-  // Специальности, встречающиеся в открытых заявках — для чипов-фильтра (заказчику)
-  const profsInFeed = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of requests) r.professions.forEach((p) => set.add(p));
-    return professions.filter((p) => set.has(p.id));
-  }, [requests, professions]);
-
-  // Специалист видит только заявки своей специальности (в т.ч. мультизаявки «собрать той»);
-  // заказчик может фильтровать по всем специальностям.
+  // Что показываем в ленте:
+  //  специалист — открытые заявки его специальности (для отклика);
+  //  заказчик — только СВОИ заявки (смотрит отклики), чужие ему не нужны;
+  //  гость — ничего (сначала войти).
   const shownRequests = asSpecialist && mySpecialist
     ? requests.filter((r) => r.professions.includes(mySpecialist.profession))
-    : fProf
-      ? requests.filter((r) => r.professions.includes(fProf))
-      : requests;
+    : asClient
+      ? requests.filter(isMine)
+      : [];
 
   if (!ready) return <div className="container" style={{ padding: 48 }} />;
 
@@ -260,23 +253,18 @@ export default function OrdersPage() {
         </form>
       )}
 
-      {/* Фильтр по специальности — только заказчику (специалист видит свою) */}
-      {!asSpecialist && profsInFeed.length > 1 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
-          <button className={`chip ${!fProf ? "chip-active" : ""}`} onClick={() => setFProf("")}>{t("Все специальности")}</button>
-          {profsInFeed.map((p) => (
-            <button key={p.id} className={`chip ${fProf === p.id ? "chip-active" : ""}`} onClick={() => setFProf(p.id)}>
-              {p.emoji} {profName(p, lang)}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Лента заявок */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 22 }}>
+        {asClient && shownRequests.length > 0 && (
+          <h2 className="h2" style={{ fontSize: "1.15rem", margin: "4px 0 0" }}>{t("Мои заявки")}</h2>
+        )}
         {shownRequests.length === 0 && (
           <div className="card card-pad" style={{ textAlign: "center", color: "var(--text-mute)" }}>
-            {fProf ? t("Нет заявок по этой специальности.") : t("Открытых заявок пока нет.")}
+            {asClient
+              ? t("У вас пока нет заявок. Разместите первую — специалисты откликнутся.")
+              : asSpecialist
+                ? t("Пока нет заказов по вашей специальности — заглядывайте позже.")
+                : t("Войдите, чтобы разместить заявку.")}
           </div>
         )}
         {shownRequests.map((r) => {
