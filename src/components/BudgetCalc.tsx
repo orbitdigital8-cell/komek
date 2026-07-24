@@ -21,12 +21,6 @@ export default function BudgetCalc({ professions, avg }: { professions: Professi
     router.push("/match");
   }
 
-  // 📋 Разместить заявку на бирже с предзаполненными категориями и бюджетом
-  function goToOrders() {
-    try { sessionStorage.setItem("komek_calc", JSON.stringify({ profs: [...sel], budget: total, guests })); } catch { /* ignore */ }
-    router.push("/orders");
-  }
-
   // Только профессии, для которых есть средняя цена
   const list = useMemo(() => professions.filter((p) => avg[p.id] > 0), [professions, avg]);
 
@@ -76,7 +70,6 @@ export default function BudgetCalc({ professions, avg }: { professions: Professi
               {t("Это ориентир по средним ценам. Точную стоимость уточняйте у специалистов.")}
             </p>
             <button onClick={goToAi} className="btn btn-primary btn-block" style={{ marginTop: 8 }}>✨ {t("Подобрать команду ИИ")}</button>
-            <button onClick={goToOrders} className="btn btn-outline btn-block" style={{ marginTop: 8 }}>📋 {t("Разместить заявку")}</button>
           </div>
         )}
       </div>
