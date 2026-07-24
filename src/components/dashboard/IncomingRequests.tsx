@@ -104,7 +104,7 @@ export default function IncomingRequests({ specialistId, onChange }: { specialis
 
           {openChat === r.id && (
             <div style={{ marginTop: 12 }}>
-              <Chat requestId={r.id} peerName={r.client_name} />
+              <Chat requestId={r.id} peerName={r.client_name} senderRole="specialist" />
             </div>
           )}
         </div>

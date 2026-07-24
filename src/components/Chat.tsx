@@ -10,7 +10,7 @@ import type { Message } from "@/lib/types";
 //   undefined      — обычный режим (авторизованный участник, RLS + realtime)
 //   string | null  — режим отладки: читаем/пишем через админский API от имени персоны
 //                    (null = у персоны нет аккаунта, напр. демо-специалист → только чтение)
-export default function Chat({ requestId, peerName, adminSenderId }: { requestId: string; peerName?: string; adminSenderId?: string | null }) {
+export default function Chat({ requestId, peerName, adminSenderId, senderRole }: { requestId: string; peerName?: string; adminSenderId?: string | null; senderRole?: "client" | "specialist" }) {
   const sb = supabaseBrowser();
   const { user } = useAuth();
   const { t } = useLang();
@@ -85,6 +85,8 @@ export default function Chat({ requestId, peerName, adminSenderId }: { requestId
       setMessages((cur) => (cur.some((x) => x.id === m.id) ? cur : [...cur, m]));
       setText("");
       scrollDown();
+      // Уведомляем собеседника о новом сообщении
+      if (senderRole) fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "message", id: requestId, fromRole: senderRole }) }).catch(() => {});
     }
   }
 

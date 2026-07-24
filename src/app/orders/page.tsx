@@ -105,7 +105,9 @@ export default function OrdersPage() {
         body: JSON.stringify({ action: "create", clientId, clientName: "Заказчик (отладка)", eventDate, budget: payload.budget, details, city, professions: selProfs }),
       });
     } else if (user) {
-      await sb.from("open_requests").insert({ ...payload, client_id: user.id, client_name: user.email?.split("@")[0] ?? "Заказчик" });
+      const { data } = await sb.from("open_requests").insert({ ...payload, client_id: user.id, client_name: user.email?.split("@")[0] ?? "Заказчик" }).select("id").single();
+      // Уведомляем всех подходящих специалистов: «клиент ищет вашу услугу»
+      if (data) fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "openrequest", id: (data as { id: string }).id }) }).catch(() => {});
     }
     setBusy(false);
     setFormOpen(false);
@@ -152,6 +154,8 @@ export default function OrdersPage() {
         event_date: r.event_date,
         message: msg,
       });
+      // Уведомляем выбранного специалиста
+      fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "pick", id: b.specialist_id }) }).catch(() => {});
     }
     setBusy(false);
     window.location.href = "/requests";

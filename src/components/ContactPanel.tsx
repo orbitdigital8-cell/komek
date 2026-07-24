@@ -87,6 +87,8 @@ export default function ContactPanel({ specialist, busyDates = [], packages = []
     }
     const r = data as ContactRequest;
     setReq(r);
+    // Уведомляем специалиста о новой заявке (все его каналы)
+    fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "request", id: r.id }) }).catch(() => {});
     if (r.status === "accepted") await loadContacts(specialist.id);
   }
 

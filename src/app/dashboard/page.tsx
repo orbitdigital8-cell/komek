@@ -10,6 +10,7 @@ import { useLang } from "@/lib/lang";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 import PackagesEditor from "@/components/dashboard/PackagesEditor";
 import CasesEditor from "@/components/dashboard/CasesEditor";
+import NotifySettings from "@/components/dashboard/NotifySettings";
 import IncomingRequests from "@/components/dashboard/IncomingRequests";
 import BusyDatesManager from "@/components/dashboard/BusyDatesManager";
 import DebugSpecialistCabinet from "@/components/DebugSpecialistCabinet";
@@ -118,6 +119,9 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Уведомления о заявках */}
+      {specialist && <NotifySettings userId={user!.id} />}
 
       {/* Статистика специалиста */}
       {specialist && stats && (

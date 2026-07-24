@@ -105,7 +105,7 @@ export default function RequestsPage() {
 
               {openChat === r.id && (
                 <div style={{ marginTop: 12 }}>
-                  <Chat requestId={r.id} peerName={r.specialist?.name} />
+                  <Chat requestId={r.id} peerName={r.specialist?.name} senderRole="client" />
                 </div>
               )}
 
