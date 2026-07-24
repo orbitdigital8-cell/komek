@@ -1,15 +1,14 @@
 import { cookies } from "next/headers";
-import HeroActions from "@/components/HeroActions";
+import Hero from "@/components/Hero";
 import HomeSections from "@/components/HomeSections";
 import { supabaseServer } from "@/lib/supabase/server";
-import { makeT, type Lang } from "@/lib/i18n";
+import { type Lang } from "@/lib/i18n";
 import type { Profession, Specialist } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const lang: Lang = (await cookies()).get("lang")?.value === "kk" ? "kk" : "ru";
-  const t = makeT(lang);
   const sb = await supabaseServer();
   // Первая страница каталога — с сервера; дальше клиент запрашивает сам (серверная пагинация).
   const [{ data: professions }, { data: specialists, count }] = await Promise.all([
@@ -34,33 +33,7 @@ export default async function HomePage() {
         <div aria-hidden style={{ position: "absolute", top: -120, left: "12%", width: 340, height: 340, borderRadius: "50%", background: "radial-gradient(circle, rgba(147,51,234,.22), transparent 68%)", filter: "blur(20px)" }} />
         <div aria-hidden style={{ position: "absolute", top: -60, right: "8%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle, rgba(194,155,69,.32), transparent 68%)", filter: "blur(18px)" }} />
 
-        <div className="container" style={{ position: "relative", padding: "64px 22px 52px", textAlign: "center" }}>
-          <span className="badge badge-soft" style={{ marginBottom: 18, padding: "7px 16px", fontSize: "0.82rem" }}>
-            ✦ {t("Kömek — нужный специалист под любой случай")}
-          </span>
-          <h1 className="h1" style={{ maxWidth: 860, margin: "0 auto 18px" }}>
-            {lang === "kk" ? (
-              <>
-                <span className="gradient-text">Тойға, мерекеге</span> және үйге маман табыңыз
-              </>
-            ) : (
-              <>
-                Найдите специалиста для <span className="gradient-text">тоя, праздника</span> и дома
-              </>
-            )}
-          </h1>
-          <p className="lead" style={{ maxWidth: 600, margin: "0 auto 28px" }}>
-            {t("Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители — для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.")}
-          </p>
-          <HeroActions />
-
-          {/* мини-доверие */}
-          <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
-            <span>🎯 {t("20+ специальностей")}</span>
-            <span>⭐ {t("Отзывы от реальных клиентов")}</span>
-            <span>🔒 {t("Контакты — после подтверждения")}</span>
-          </div>
-        </div>
+        <Hero lang={lang} />
       </section>
 
       {/* Ниже — контент по роли: заказчику витрина+каталог, специалисту его заказы */}
