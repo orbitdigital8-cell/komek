@@ -4,13 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useShortlist } from "@/lib/shortlist";
-import { useNotifications } from "@/lib/useNotifications";
 import { useLang } from "@/lib/lang";
+import NotifBell from "@/components/NotifBell";
 
 export default function Header() {
   const { user, role, name, loading, signOut } = useAuth();
   const { ids, ready } = useShortlist();
-  const { total } = useNotifications();
   const { lang, setLang, t } = useLang();
   const router = useRouter();
 
@@ -112,17 +111,12 @@ export default function Header() {
           ) : (
             <>
               {role === "specialist" && (
-                <Link href="/dashboard" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  {t("Моя анкета")}
-                  {total > 0 && <span className="pill-count">{total}</span>}
-                </Link>
+                <Link href="/dashboard" className="btn btn-ghost btn-sm">{t("Моя анкета")}</Link>
               )}
               {role === "client" && (
-                <Link href="/requests" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  {t("Мои запросы")}
-                  {total > 0 && <span className="pill-count">{total}</span>}
-                </Link>
+                <Link href="/requests" className="btn btn-ghost btn-sm">{t("Мои запросы")}</Link>
               )}
+              <NotifBell />
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 8 }}>
                 <span
                   className="badge badge-soft"
