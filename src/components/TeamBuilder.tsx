@@ -14,10 +14,11 @@ const CARD_COLS =
 
 // Конструктор команды: убрать участника, заменить на другого (дешевле/дороже),
 // видеть итоговый бюджет. Начальный состав — из ИИ-подбора.
-export default function TeamBuilder({ initial, professions, reasonById }: {
+export default function TeamBuilder({ initial, professions, reasonById, budget }: {
   initial: Specialist[];
   professions: Record<string, Profession>;
   reasonById: Record<string, string>;
+  budget?: number | null;
 }) {
   const sb = supabaseBrowser();
   const { user, role, name } = useAuth();
@@ -33,6 +34,7 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
   const total = team.reduce((s, x) => s + (x.price_from ?? 0), 0);
   const fmt = (n: number) => n.toLocaleString("ru-RU") + " ₸";
   const replacingMember = team.find((m) => m.id === replacing) ?? null;
+  const over = budget && total > budget ? total - budget : 0; // превышение бюджета
 
   function remove(id: string) {
     setTeam((cur) => cur.filter((x) => x.id !== id));
@@ -98,10 +100,20 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
             <div className="soft" style={{ fontSize: "0.85rem" }}>{t("Можно убрать или заменить любого — бюджет пересчитается")}</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div className="muted" style={{ fontSize: "0.8rem" }}>{t("Итого от")}</div>
-            <strong style={{ fontSize: "1.4rem", color: "var(--brand)" }}>{fmt(total)}</strong>
+            <div className="muted" style={{ fontSize: "0.8rem" }}>{budget ? `${t("Ваш бюджет")}: ${fmt(budget)}` : t("Итого от")}</div>
+            <strong style={{ fontSize: "1.4rem", color: over > 0 ? "var(--bad)" : "var(--brand)" }}>{fmt(total)}</strong>
           </div>
         </div>
+
+        {/* Превышение бюджета — понятная подсказка что делать */}
+        {over > 0 && (
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "10px 12px", borderRadius: 10, background: "#fdecea", color: "#a5352c" }}>
+            <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+            <span style={{ fontSize: "0.88rem", lineHeight: 1.45 }}>
+              {t("Дороже вашего бюджета на")} <strong>{fmt(over)}</strong>. {t("Уберите кого-то (✕) или замените (⇄) на специалиста подешевле — сумма пересчитается.")}
+            </span>
+          </div>
+        )}
         {/* Специалисту эта кнопка не нужна — он не заказывает команду */}
         {role !== "specialist" && (
           sent > 0 ? (
