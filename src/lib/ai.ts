@@ -57,9 +57,10 @@ export async function aiComplete(prompt: string, maxTokens = 800): Promise<strin
   return "";
 }
 
-// Достаём JSON из ответа модели (на случай пояснений вокруг)
+// Достаём JSON из ответа модели: снимаем markdown-обёртку ```json и берём {…}
 export function extractJson<T>(text: string): T | null {
-  const m = text.match(/\{[\s\S]*\}/);
-  if (!m) return null;
-  try { return JSON.parse(m[0]) as T; } catch { return null; }
+  let s = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const m = s.match(/\{[\s\S]*\}/);
+  if (m) s = m[0];
+  try { return JSON.parse(s) as T; } catch { return null; }
 }

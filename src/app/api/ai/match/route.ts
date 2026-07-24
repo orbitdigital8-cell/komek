@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     .select("id, profession, name, city, price_from, rating, review_count, tags, tagline")
     .eq("published", true)
     .order("rating", { ascending: false })
-    .limit(400);
+    .limit(120);
 
   const compact = ((data as {
     id: string; profession: string; name: string; city: string;
@@ -36,8 +36,8 @@ export async function POST(req: Request) {
 ${compact.join("\n")}
 
 Подбери 2-6 подходящих специалистов (профессии — под задачу; город клиента важен; уложись в бюджет, если назван). Не выдумывай id.
-Ответ строго JSON: {"intro": "1-2 тёплых предложения по-русски, почему такой состав", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
-    900,
+Верни ТОЛЬКО JSON без markdown и без пояснений: {"intro": "1-2 тёплых предложения по-русски, почему такой состав", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
+    1200,
   );
 
   const json = extractJson<{ intro: string; picks: { id: string; reason: string }[] }>(text);
