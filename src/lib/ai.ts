@@ -9,6 +9,8 @@ type Provider = { name: string; key?: string; call: (prompt: string, maxTokens: 
 const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "meta-llama/llama-3.3-70b-instruct:free";
 const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL ?? "llama-3.3-70b";
+const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "mistral-small-latest";
+const COHERE_MODEL = process.env.COHERE_MODEL ?? "command-r-08-2024";
 
 // OpenAI-совместимый вызов (Groq, OpenRouter, Cerebras и т.п.)
 async function openaiCompatible(url: string, key: string, model: string, prompt: string, maxTokens: number, extraHeaders: Record<string, string> = {}): Promise<string> {
@@ -27,11 +29,30 @@ async function openaiCompatible(url: string, key: string, model: string, prompt:
   }
 }
 
+// Cohere v2 — свой формат ответа (message.content[0].text)
+async function cohereComplete(key: string, prompt: string, maxTokens: number): Promise<string> {
+  try {
+    const r = await fetch("https://api.cohere.com/v2/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: COHERE_MODEL, max_tokens: maxTokens, messages: [{ role: "user", content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) { console.error("AI cohere error:", JSON.stringify(d).slice(0, 200)); return ""; }
+    return d?.message?.content?.[0]?.text ?? "";
+  } catch (e) {
+    console.error("AI cohere exception:", String(e).slice(0, 200));
+    return "";
+  }
+}
+
 // Цепочка провайдеров по приоритету — первый с ключом и ответом побеждает.
 function providers(): Provider[] {
   return [
     { name: "groq", key: process.env.GROQ_API_KEY, call: (p: string, m: number) => openaiCompatible("https://api.groq.com/openai/v1/chat/completions", process.env.GROQ_API_KEY!, GROQ_MODEL, p, m) },
     { name: "openrouter", key: process.env.OPENROUTER_API_KEY, call: (p: string, m: number) => openaiCompatible("https://openrouter.ai/api/v1/chat/completions", process.env.OPENROUTER_API_KEY!, OPENROUTER_MODEL, p, m, { "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://komek.kz", "X-Title": "Komek" }) },
+    { name: "mistral", key: process.env.MISTRAL_API_KEY, call: (p: string, m: number) => openaiCompatible("https://api.mistral.ai/v1/chat/completions", process.env.MISTRAL_API_KEY!, MISTRAL_MODEL, p, m) },
+    { name: "cohere", key: process.env.COHERE_API_KEY, call: (p: string, m: number) => cohereComplete(process.env.COHERE_API_KEY!, p, m) },
     { name: "cerebras", key: process.env.CEREBRAS_API_KEY, call: (p: string, m: number) => openaiCompatible("https://api.cerebras.ai/v1/chat/completions", process.env.CEREBRAS_API_KEY!, CEREBRAS_MODEL, p, m) },
   ].filter((x) => !!x.key);
 }
