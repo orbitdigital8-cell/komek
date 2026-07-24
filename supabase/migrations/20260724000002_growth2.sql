@@ -3,13 +3,13 @@
 -- ============================================================================
 
 -- Последняя активность специалиста (для «● онлайн / был N назад»)
-alter table public.specialists add column last_seen timestamptz;
+alter table public.specialists add column if not exists last_seen timestamptz;
 
 -- Счётчик выполненных заказов — для бейджей-уровней (10/50/100)
-alter table public.specialists add column orders_count int not null default 0;
+alter table public.specialists add column if not exists orders_count int not null default 0;
 
 -- Видео-отзыв (короткий кружок от заказчика)
-alter table public.reviews add column video text not null default '';
+alter table public.reviews add column if not exists video text not null default '';
 
 -- Специалист «трогает» свою активность (вызывается из кабинета).
 create or replace function public.touch_last_seen(sid uuid)
@@ -21,7 +21,7 @@ as $$
   update public.specialists set last_seen = now()
   where id = sid and owner_id = auth.uid();
 $$;
-grant execute on public.touch_last_seen(uuid) to authenticated;
+grant execute on function public.touch_last_seen(uuid) to authenticated;
 
 -- При завершении заказа увеличиваем счётчик выполненных
 create or replace function public.bump_orders_count()
@@ -38,6 +38,7 @@ begin
 end;
 $$;
 
+drop trigger if exists contact_requests_bump_orders on public.contact_requests;
 create trigger contact_requests_bump_orders
   after update on public.contact_requests
   for each row execute function public.bump_orders_count();

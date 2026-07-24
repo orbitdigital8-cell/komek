@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin, adminEnabled } from "@/lib/supabase/admin";
+import { supabaseAdmin, requireAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!adminEnabled()) return NextResponse.json({ error: "disabled" }, { status: 403 });
+  if (!await requireAdmin()) return NextResponse.json({ error: "disabled" }, { status: 403 });
   const sb = supabaseAdmin();
 
   const [professions, specialists, requests, reviews, profiles, busy, contacts, socials, reports] = await Promise.all([

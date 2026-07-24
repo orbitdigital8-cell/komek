@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin, adminEnabled } from "@/lib/supabase/admin";
+import { supabaseAdmin, requireAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 // Пакеты услуг и примеры работ для режима отладки (обход RLS через service_role).
 // action: list | add_package | del_package | add_case | del_case
 export async function POST(req: Request) {
-  if (!adminEnabled()) return NextResponse.json({ error: "disabled" }, { status: 403 });
+  if (!await requireAdmin()) return NextResponse.json({ error: "disabled" }, { status: 403 });
   const b = await req.json();
   const sb = supabaseAdmin();
   const sid = b.specialistId as string;

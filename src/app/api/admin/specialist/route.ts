@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin, adminEnabled } from "@/lib/supabase/admin";
+import { supabaseAdmin, requireAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 // Отладка: сохранить анкету выбранного специалиста в обход RLS.
 export async function POST(req: Request) {
-  if (!adminEnabled()) return NextResponse.json({ error: "disabled" }, { status: 403 });
+  if (!await requireAdmin()) return NextResponse.json({ error: "disabled" }, { status: 403 });
   const body = await req.json();
   const specialistId: string = body.specialistId;
   if (!specialistId) return NextResponse.json({ error: "no id" }, { status: 400 });

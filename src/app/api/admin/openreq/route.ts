@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin, adminEnabled } from "@/lib/supabase/admin";
+import { supabaseAdmin, requireAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 // Действия биржи заявок в режиме отладки персон (обход RLS через service_role).
 // action: create | bid | close | pick
 export async function POST(req: Request) {
-  if (!adminEnabled()) return NextResponse.json({ error: "disabled" }, { status: 403 });
+  if (!await requireAdmin()) return NextResponse.json({ error: "disabled" }, { status: 403 });
   const body = await req.json();
   const sb = supabaseAdmin();
 
