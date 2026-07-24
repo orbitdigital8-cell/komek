@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/lang";
 import { profName, priceLabelL } from "@/lib/i18n";
-import Stars from "@/components/Stars";
-import { loyaltyLevel, type Profession, type Specialist } from "@/lib/types";
+import SpecialistCard from "@/components/SpecialistCard";
+import type { Profession, Specialist } from "@/lib/types";
 
 const CARD_COLS =
   "id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count, last_seen, orders_count";
@@ -33,6 +32,7 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
 
   const total = team.reduce((s, x) => s + (x.price_from ?? 0), 0);
   const fmt = (n: number) => n.toLocaleString("ru-RU") + " ₸";
+  const replacingMember = team.find((m) => m.id === replacing) ?? null;
 
   function remove(id: string) {
     setTeam((cur) => cur.filter((x) => x.id !== id));
@@ -116,61 +116,52 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
         )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {team.map((m) => {
-          const p = professions[m.profession];
-          const lvl = loyaltyLevel(m.orders_count);
-          return (
-            <div key={m.id} className="card card-pad">
-              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={m.avatar_url} alt="" className="avatar" style={{ width: 52, height: 52 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span className="badge badge-soft">{p?.emoji} {profName(p, lang)}</span>
-                    <Link href={`/s/${m.id}`} className="link" style={{ fontWeight: 700 }}>{m.name}</Link>
-                    {lvl && <span title={t(lvl.label)}>{lvl.emoji}</span>}
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Stars rating={m.rating} />{m.review_count > 0 && <span className="muted" style={{ fontSize: "0.76rem" }}>({m.review_count})</span>}</span>
-                  </div>
-                  <div className="soft" style={{ fontSize: "0.85rem", marginTop: 2 }}>📍 {t(m.city)} · <strong style={{ color: "var(--brand)" }}>{priceLabelL(m.price_from, lang)}</strong></div>
-                  {reasonById[m.id] && <div className="muted" style={{ fontSize: "0.8rem", marginTop: 2 }}>💡 {reasonById[m.id]}</div>}
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button className="btn btn-outline btn-sm" onClick={() => openReplace(m)}>⇄ {t("Заменить")}</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => remove(m.id)} title={t("Убрать")}>✕</button>
-                </div>
-              </div>
-
-              {/* Альтернативы для замены — той же профессии */}
-              {replacing === m.id && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                  <div className="muted" style={{ fontSize: "0.82rem", marginBottom: 8 }}>{t("Замена — тот же профиль, выберите по цене и рейтингу:")}</div>
-                  {loadingAlts ? (
-                    <div className="muted">{t("Загрузка…")}</div>
-                  ) : alts.length === 0 ? (
-                    <div className="muted">{t("Других специалистов этой профессии не найдено.")}</div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {alts.map((a) => (
-                        <button key={a.id} onClick={() => replaceWith(m.id, a)}
-                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface-2)", cursor: "pointer", textAlign: "left" }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={a.avatar_url} alt="" className="avatar" style={{ width: 38, height: 38 }} />
-                          <span style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ display: "block", fontWeight: 600, fontSize: "0.9rem" }}>{a.name}</span>
-                            <span className="muted" style={{ fontSize: "0.78rem" }}>📍 {t(a.city)} · ★ {a.rating.toFixed(1)} ({a.review_count})</span>
-                          </span>
-                          <strong style={{ color: "var(--brand)", fontSize: "0.9rem", whiteSpace: "nowrap" }}>{priceLabelL(a.price_from, lang)}</strong>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+      {/* Карточки-плитки, как в каталоге, + действия под каждой */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+        {team.map((m) => (
+          <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <SpecialistCard s={m} prof={professions[m.profession]} />
+            {reasonById[m.id] && <span className="muted" style={{ fontSize: "0.82rem", padding: "0 4px" }}>💡 {reasonById[m.id]}</span>}
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="btn btn-outline btn-sm" style={{ flex: 1 }} onClick={() => openReplace(m)}>⇄ {t("Заменить")}</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => remove(m.id)} title={t("Убрать")}>✕</button>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
+
+      {/* Модалка замены — тот же профиль, выбор по цене и рейтингу */}
+      {replacingMember && (
+        <div onClick={() => setReplacing(null)} style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} className="card card-pad" style={{ width: "min(480px, 100%)", maxHeight: "80vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+              <strong>⇄ {t("Заменить")}: {profName(professions[replacingMember.profession], lang)}</strong>
+              <button className="btn btn-ghost btn-sm" onClick={() => setReplacing(null)}>✕</button>
+            </div>
+            <div className="muted" style={{ fontSize: "0.82rem", marginBottom: 10 }}>{t("Замена — тот же профиль, выберите по цене и рейтингу:")}</div>
+            {loadingAlts ? (
+              <div className="muted">{t("Загрузка…")}</div>
+            ) : alts.length === 0 ? (
+              <div className="muted">{t("Других специалистов этой профессии не найдено.")}</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {alts.map((a) => (
+                  <button key={a.id} onClick={() => replaceWith(replacingMember.id, a)}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface-2)", cursor: "pointer", textAlign: "left" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={a.avatar_url} alt="" className="avatar" style={{ width: 40, height: 40 }} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: "block", fontWeight: 600, fontSize: "0.9rem" }}>{a.name}</span>
+                      <span className="muted" style={{ fontSize: "0.78rem" }}>📍 {t(a.city)} · ★ {a.rating.toFixed(1)} ({a.review_count})</span>
+                    </span>
+                    <strong style={{ color: "var(--brand)", fontSize: "0.9rem", whiteSpace: "nowrap" }}>{priceLabelL(a.price_from, lang)}</strong>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
