@@ -123,6 +123,7 @@ export interface Review {
   rating: number;
   text: string;
   photos: string[];
+  video: string;
   created_at: string;
 }
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import Stars from "@/components/Stars";
+import CompareVote from "@/components/CompareVote";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, priceLabelL, profName, yearsLabel, type Lang } from "@/lib/i18n";
 import type { Profession, Specialist } from "@/lib/types";
@@ -52,7 +53,10 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   return (
     <div className="container" style={{ padding: "28px 22px 40px" }}>
       <h1 className="h2" style={{ marginBottom: 6 }}>{t("Подборка специалистов")}</h1>
-      <p className="soft" style={{ marginBottom: 20 }}>{t("Этой подборкой с вами поделились. Сравните и откройте понравившегося.")}</p>
+      <p className="soft" style={{ marginBottom: 20 }}>{t("Этой подборкой с вами поделились. Отметьте, кто нравится — и обсудите выбор вместе.")}</p>
+
+      <CompareVote specialists={list.map((s) => ({ id: s.id, name: s.name }))} />
+
 
       <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--surface)" }}>
         <div style={{ display: "grid", gridTemplateColumns: `160px repeat(${list.length}, minmax(210px, 1fr))`, minWidth: "fit-content" }}>

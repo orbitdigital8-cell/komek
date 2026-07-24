@@ -25,6 +25,9 @@ export default function ReviewsList({ reviews }: { reviews: Review[] }) {
             <span style={{ color: "var(--accent)", letterSpacing: 1 }}>{stars(r.rating)}</span>
           </div>
           {r.text && <p className="soft" style={{ fontSize: "0.92rem", margin: "8px 0 0" }}>{r.text}</p>}
+          {r.video && (
+            <video src={r.video} controls preload="metadata" style={{ marginTop: 10, width: 200, height: 200, objectFit: "cover", borderRadius: "50%", background: "#000" }} />
+          )}
           {r.photos?.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
               {r.photos.map((u, i) => (
