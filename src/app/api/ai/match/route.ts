@@ -34,6 +34,10 @@ const PROF_KEYWORDS: Record<string, string[]> = {
 // «Собери команду / весь той» — сигнал, что нужно несколько профессий
 const TEAM_SIGNALS = ["команд", "весь той", "полный", "под ключ", "всё для", "все для", "собрать той", "организ"];
 
+// Бытовые профессии — не для праздничной команды (в командном подборе исключаем,
+// если клиент не назвал их явно). Это услуги для дома, а не для программы тоя.
+const HOUSEHOLD = ["nanny", "housekeeper", "cook", "driver"];
+
 function detectProfessions(query: string): string[] {
   const q = query.toLowerCase();
   const found: string[] = [];
@@ -77,12 +81,16 @@ export async function POST(req: Request) {
   const restrict = wanted.length > 0 && !teamMode;
   const city = detectCity(query); // на один той нужны специалисты из одного города
 
+  // Бытовые исключаем только в командном подборе и если клиент их не называл явно
+  const excludeHousehold = teamMode && !wanted.some((w) => HOUSEHOLD.includes(w));
+
   async function fetchCatalog(withCity: boolean) {
     let cat = sb
       .from("specialists")
       .select("id, profession, name, city, price_from, rating, review_count")
       .eq("published", true);
     if (restrict) cat = cat.in("profession", wanted);
+    if (excludeHousehold) cat = cat.not("profession", "in", `(${HOUSEHOLD.join(",")})`);
     if (withCity && city) cat = cat.eq("city", city);
     const { data } = await cat.order("rating", { ascending: false }).limit(restrict ? 25 : 80);
     return (data as { id: string; profession: string; name: string; city: string; price_from: number | null; rating: number; review_count: number }[]) ?? [];
