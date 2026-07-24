@@ -42,9 +42,8 @@ export default function OrdersPage() {
   const [bidPrice, setBidPrice] = useState("");
   const [bidMsg, setBidMsg] = useState("");
 
-  // Фильтр по специальности
+  // Фильтр по специальности (для заказчика)
   const [fProf, setFProf] = useState<string>("");
-  const [fInit, setFInit] = useState(false);
 
   const profMap = useMemo(() => {
     const m: Record<string, Profession> = {};
@@ -184,19 +183,20 @@ export default function OrdersPage() {
   const isMine = (r: OpenRequest) => !!clientId && r.client_id === clientId;
   const canBid = (r: OpenRequest) => asSpecialist && !!mySpecialist && r.professions.includes(mySpecialist.profession);
 
-  // Специалисту по умолчанию показываем заявки его специальности
-  useEffect(() => {
-    if (!fInit && mySpecialist) { setFProf(mySpecialist.profession); setFInit(true); }
-  }, [mySpecialist, fInit]);
-
-  // Специальности, встречающиеся в открытых заявках — для чипов-фильтра
+  // Специальности, встречающиеся в открытых заявках — для чипов-фильтра (заказчику)
   const profsInFeed = useMemo(() => {
     const set = new Set<string>();
     for (const r of requests) r.professions.forEach((p) => set.add(p));
     return professions.filter((p) => set.has(p.id));
   }, [requests, professions]);
 
-  const shownRequests = fProf ? requests.filter((r) => r.professions.includes(fProf)) : requests;
+  // Специалист видит только заявки своей специальности (в т.ч. мультизаявки «собрать той»);
+  // заказчик может фильтровать по всем специальностям.
+  const shownRequests = asSpecialist && mySpecialist
+    ? requests.filter((r) => r.professions.includes(mySpecialist.profession))
+    : fProf
+      ? requests.filter((r) => r.professions.includes(fProf))
+      : requests;
 
   if (!ready) return <div className="container" style={{ padding: 48 }} />;
 
@@ -260,8 +260,8 @@ export default function OrdersPage() {
         </form>
       )}
 
-      {/* Фильтр по специальности */}
-      {profsInFeed.length > 1 && (
+      {/* Фильтр по специальности — только заказчику (специалист видит свою) */}
+      {!asSpecialist && profsInFeed.length > 1 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
           <button className={`chip ${!fProf ? "chip-active" : ""}`} onClick={() => setFProf("")}>{t("Все специальности")}</button>
           {profsInFeed.map((p) => (
