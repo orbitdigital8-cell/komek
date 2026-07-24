@@ -110,14 +110,9 @@ export default function DashboardPage() {
             {specialist ? t("Управляйте анкетой и заявками на связь.") : t("Заполните анкету, чтобы попасть в каталог.")}
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          {specialist && viewsWeek !== null && (
-            <span className="badge badge-soft" title={t("Просмотры анкеты за 7 дней")}>👁 {viewsWeek} {t("за неделю")}</span>
-          )}
-          {specialist && (
-            <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">{t("Открыть мою анкету ↗")}</Link>
-          )}
-        </div>
+        {specialist && (
+          <Link href={`/s/${specialist.id}`} className="btn btn-outline btn-sm">👁 {t("Смотреть как клиент")}</Link>
+        )}
       </div>
 
       {/* Уведомления о заявках */}
