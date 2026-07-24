@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/lang";
 import { profName, priceLabelL } from "@/lib/i18n";
 import Stars from "@/components/Stars";
@@ -19,11 +21,15 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
   reasonById: Record<string, string>;
 }) {
   const sb = supabaseBrowser();
+  const { user, role, name } = useAuth();
+  const router = useRouter();
   const { lang, t } = useLang();
   const [team, setTeam] = useState<Specialist[]>(initial);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [alts, setAlts] = useState<Specialist[]>([]);
   const [loadingAlts, setLoadingAlts] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(0);
 
   const total = team.reduce((s, x) => s + (x.price_from ?? 0), 0);
   const fmt = (n: number) => n.toLocaleString("ru-RU") + " ₸";
@@ -57,6 +63,27 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
     setAlts([]);
   }
 
+  // Запросить контакты у всей команды — по одному запросу каждому специалисту
+  async function requestAll() {
+    if (!user) { router.push("/login?next=/match"); return; }
+    setSending(true);
+    let ok = 0;
+    for (const m of team) {
+      const { error } = await sb.from("contact_requests").upsert(
+        { specialist_id: m.id, client_id: user.id, client_name: name || "Заказчик", client_phone: "", message: t("Собираю команду на той через ИИ-подбор Kömek.") },
+        { onConflict: "specialist_id,client_id" },
+      ).select("id").single();
+      if (!error) {
+        ok++;
+        // уведомление специалисту (все его каналы + кабинет)
+        const { data } = await sb.from("contact_requests").select("id").eq("specialist_id", m.id).eq("client_id", user.id).maybeSingle();
+        if (data) fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "request", id: (data as { id: string }).id }) }).catch(() => {});
+      }
+    }
+    setSent(ok);
+    setSending(false);
+  }
+
   if (team.length === 0) {
     return <div className="card card-pad muted" style={{ marginTop: 16 }}>{t("Команда пуста — уберите фильтры или запросите подбор заново.")}</div>;
   }
@@ -64,15 +91,29 @@ export default function TeamBuilder({ initial, professions, reasonById }: {
   return (
     <div style={{ marginTop: 16 }}>
       {/* Итоговая панель бюджета */}
-      <div className="card card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14, background: "linear-gradient(135deg, var(--surface) 60%, #eef7ee)" }}>
-        <div>
-          <strong style={{ fontSize: "1.05rem" }}>{t("Ваша команда")}: {team.length}</strong>
-          <div className="soft" style={{ fontSize: "0.85rem" }}>{t("Можно убрать или заменить любого — бюджет пересчитается")}</div>
+      <div className="card card-pad" style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14, background: "linear-gradient(135deg, var(--surface) 60%, #eef7ee)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <strong style={{ fontSize: "1.05rem" }}>{t("Ваша команда")}: {team.length}</strong>
+            <div className="soft" style={{ fontSize: "0.85rem" }}>{t("Можно убрать или заменить любого — бюджет пересчитается")}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="muted" style={{ fontSize: "0.8rem" }}>{t("Итого от")}</div>
+            <strong style={{ fontSize: "1.4rem", color: "var(--brand)" }}>{fmt(total)}</strong>
+          </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div className="muted" style={{ fontSize: "0.8rem" }}>{t("Итого от")}</div>
-          <strong style={{ fontSize: "1.4rem", color: "var(--brand)" }}>{fmt(total)}</strong>
-        </div>
+        {/* Специалисту эта кнопка не нужна — он не заказывает команду */}
+        {role !== "specialist" && (
+          sent > 0 ? (
+            <div className="badge badge-accepted" style={{ alignSelf: "flex-start" }}>
+              ✓ {t("Запросы отправлены")}: {sent}. {t("Ответы — в разделе «Мои запросы».")}
+            </div>
+          ) : (
+            <button className="btn btn-primary" disabled={sending || team.length === 0} onClick={requestAll} style={{ alignSelf: "flex-start" }}>
+              {sending ? t("Отправляем…") : `📨 ${t("Запросить контакты у всей команды")}`}
+            </button>
+          )
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
