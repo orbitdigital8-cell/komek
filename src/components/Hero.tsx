@@ -51,7 +51,8 @@ export default function Hero({ lang }: { lang: Lang }) {
         <a href="#catalog" className="btn btn-primary">{t("Смотреть каталог")}</a>
         {second}
       </div>
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 14, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+        <Link href="/calc" className="link" style={{ fontSize: "0.92rem" }}>🧮 {t("Калькулятор бюджета тоя")}</Link>
         <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
       </div>
 
