@@ -1,61 +1,51 @@
 import "server-only";
 
-// ИИ-функции платформы для пользователей — на бесплатном провайдере.
-// Приоритет: Groq (бесплатно, работает в КЗ) → Gemini (если доступен в регионе).
-// Разработку ведём через Claude Code отдельно; Anthropic в платформе не используется.
+// ИИ-функции платформы — бесплатные провайдеры с автопереключением (fallback).
+// Если у одного кончился дневной лимит (429) — запрос идёт к следующему.
+// Anthropic в платформе НЕ используется (это лишь инструмент разработки).
 
-function provider(): "groq" | "gemini" | null {
-  if (process.env.GROQ_API_KEY) return "groq";
-  if (process.env.GEMINI_API_KEY) return "gemini";
-  return null;
+type Provider = { name: string; key?: string; call: (prompt: string, maxTokens: number) => Promise<string> };
+
+const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "meta-llama/llama-3.3-70b-instruct:free";
+const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL ?? "llama-3.3-70b";
+
+// OpenAI-совместимый вызов (Groq, OpenRouter, Cerebras и т.п.)
+async function openaiCompatible(url: string, key: string, model: string, prompt: string, maxTokens: number, extraHeaders: Record<string, string> = {}): Promise<string> {
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, ...extraHeaders },
+      body: JSON.stringify({ model, max_tokens: maxTokens, temperature: 0.7, messages: [{ role: "user", content: prompt }] }),
+    });
+    const d = await r.json();
+    if (!r.ok) { console.error(`AI ${url} error:`, JSON.stringify(d).slice(0, 200)); return ""; }
+    return d?.choices?.[0]?.message?.content ?? "";
+  } catch (e) {
+    console.error(`AI ${url} exception:`, String(e).slice(0, 200));
+    return "";
+  }
+}
+
+// Цепочка провайдеров по приоритету — первый с ключом и ответом побеждает.
+function providers(): Provider[] {
+  return [
+    { name: "groq", key: process.env.GROQ_API_KEY, call: (p: string, m: number) => openaiCompatible("https://api.groq.com/openai/v1/chat/completions", process.env.GROQ_API_KEY!, GROQ_MODEL, p, m) },
+    { name: "openrouter", key: process.env.OPENROUTER_API_KEY, call: (p: string, m: number) => openaiCompatible("https://openrouter.ai/api/v1/chat/completions", process.env.OPENROUTER_API_KEY!, OPENROUTER_MODEL, p, m, { "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://komek.kz", "X-Title": "Komek" }) },
+    { name: "cerebras", key: process.env.CEREBRAS_API_KEY, call: (p: string, m: number) => openaiCompatible("https://api.cerebras.ai/v1/chat/completions", process.env.CEREBRAS_API_KEY!, CEREBRAS_MODEL, p, m) },
+  ].filter((x) => !!x.key);
 }
 
 export function aiEnabled(): boolean {
-  return provider() !== null;
+  return providers().length > 0;
 }
 
-// 8b-instant: быстрая, с большим бесплатным дневным лимитом токенов.
-// Для более умного подбора можно задать GROQ_MODEL=llama-3.3-70b-versatile.
-const GROQ_MODEL = process.env.GROQ_MODEL ?? "llama-3.1-8b-instant";
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
-
-// Единый вызов ИИ: принимает промпт, возвращает текст ответа.
+// Единый вызов ИИ: пробует провайдеров по очереди, пока не получит ответ.
 export async function aiComplete(prompt: string, maxTokens = 800): Promise<string> {
-  const p = provider();
-
-  if (p === "groq") {
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        max_tokens: maxTokens,
-        temperature: 0.7,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    const d = await r.json();
-    if (!r.ok) { console.error("Groq error:", JSON.stringify(d).slice(0, 300)); return ""; }
-    return d?.choices?.[0]?.message?.content ?? "";
+  for (const p of providers()) {
+    const out = await p.call(prompt, maxTokens);
+    if (out.trim()) return out;
   }
-
-  if (p === "gemini") {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 },
-        }),
-      },
-    );
-    const d = await r.json();
-    if (!r.ok) { console.error("Gemini error:", JSON.stringify(d).slice(0, 300)); return ""; }
-    return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  }
-
   return "";
 }
 
