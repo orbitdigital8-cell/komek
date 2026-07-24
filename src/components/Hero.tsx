@@ -52,7 +52,7 @@ export default function Hero({ lang }: { lang: Lang }) {
         {second}
       </div>
       <div style={{ marginTop: 14, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
-        <Link href="/calc" className="link" style={{ fontSize: "0.92rem" }}>🎉 {t("Собрать той по шагам")}</Link>
+        <a href="#services" className="link" style={{ fontSize: "0.92rem" }}>✨ {t("Подобрать по шагам")}</a>
         <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
       </div>
 

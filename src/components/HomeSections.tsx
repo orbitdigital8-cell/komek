@@ -1,6 +1,7 @@
 "use client";
 
 import Catalog from "@/components/Catalog";
+import ServiceGrid from "@/components/ServiceGrid";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SeasonalPicks from "@/components/SeasonalPicks";
 import TopSpecialists from "@/components/TopSpecialists";
@@ -27,6 +28,7 @@ export default function HomeSections({
 
   return (
     <>
+      <ServiceGrid />
       <TopSpecialists professions={professions} />
       <SeasonalPicks professions={professions} month={month} />
       <AiMatch professions={professions} />
