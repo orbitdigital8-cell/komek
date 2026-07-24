@@ -14,7 +14,7 @@ import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
 import ReportButton from "@/components/ReportButton";
 import ViewTracker from "@/components/ViewTracker";
 import SpecialistCard from "@/components/SpecialistCard";
-import { formatDate, isFastResponder, type BusyDate, type PortfolioCase, type Profession, type Review, type Social, type Specialist, type SpecialistPackage } from "@/lib/types";
+import { formatDate, isFastResponder, loyaltyLevel, onlineStatus, type BusyDate, type PortfolioCase, type Profession, type Review, type Social, type Specialist, type SpecialistPackage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +55,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
     sb.from("portfolio_cases").select("*").eq("specialist_id", s.id).order("sort_order"),
     sb
       .from("specialists")
-      .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count")
+      .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count, last_seen, orders_count")
       .eq("published", true)
       .eq("profession", s.profession)
       .neq("id", s.id)
@@ -86,6 +86,8 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <h1 className="h2" style={{ margin: 0 }}>{s.name}</h1>
                 {s.verified && <span className="badge badge-verified">✔ {t("Проверен")}</span>}
+                {(() => { const lvl = loyaltyLevel(s.orders_count); return lvl ? <span className="badge badge-soft">{lvl.emoji} {t(lvl.label)}</span> : null; })()}
+                {(() => { const st = onlineStatus(s.last_seen, lang); return st?.online ? <span className="badge badge-accepted">● {t("онлайн")}</span> : null; })()}
                 {isFastResponder(s) && <span className="badge badge-accepted">⚡ {t("Отвечает быстро")}</span>}
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                   <Stars rating={s.rating} size={15} />
@@ -97,6 +99,8 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
               <div className="soft" style={{ marginTop: 4 }}>
                 <span className="badge badge-soft" style={{ marginRight: 8 }}>{p?.emoji} {profName(p, lang) || s.profession}</span>
                 📍 {t(s.city)} · {expLabel(s.experience_years, lang)}
+                {s.orders_count > 0 && <> · ✓ {s.orders_count} {t("заказов на Kömek")}</>}
+                {(() => { const st = onlineStatus(s.last_seen, lang); return st && !st.online ? <> · {st.text}</> : null; })()}
               </div>
             </div>
             <div style={{ marginLeft: "auto" }}>

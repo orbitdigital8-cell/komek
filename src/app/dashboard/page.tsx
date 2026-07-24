@@ -13,7 +13,7 @@ import CasesEditor from "@/components/dashboard/CasesEditor";
 import IncomingRequests from "@/components/dashboard/IncomingRequests";
 import BusyDatesManager from "@/components/dashboard/BusyDatesManager";
 import DebugSpecialistCabinet from "@/components/DebugSpecialistCabinet";
-import type { Profession, Social, Specialist, SpecialistContacts } from "@/lib/types";
+import { loyaltyLevel, type Profession, type Social, type Specialist, type SpecialistContacts } from "@/lib/types";
 
 type Tab = "profile" | "busy" | "requests";
 
@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [socials, setSocials] = useState<Social[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [viewsWeek, setViewsWeek] = useState<number | null>(null);
+  const [stats, setStats] = useState<{ views: number; requests: number; booked: number; completed: number } | null>(null);
   const [ready, setReady] = useState(false);
 
   const load = useCallback(async () => {
@@ -46,16 +47,27 @@ export default function DashboardPage() {
     setSpecialist(s);
     if (s) {
       const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-      const [{ data: c }, { data: soc }, { count }, { count: views }] = await Promise.all([
+      const [{ data: c }, { data: soc }, { count }, { count: views }, { count: viewsAll }, { data: reqs }] = await Promise.all([
         sb.from("specialist_contacts").select("*").eq("specialist_id", s.id).maybeSingle(),
         sb.from("specialist_socials").select("*").eq("specialist_id", s.id).order("sort_order"),
         sb.from("contact_requests").select("id", { count: "exact", head: true }).eq("specialist_id", s.id).eq("status", "pending"),
         sb.from("profile_views").select("id", { count: "exact", head: true }).eq("specialist_id", s.id).gte("viewed_at", weekAgo),
+        sb.from("profile_views").select("id", { count: "exact", head: true }).eq("specialist_id", s.id),
+        sb.from("contact_requests").select("status").eq("specialist_id", s.id),
       ]);
       setContacts((c as SpecialistContacts) ?? null);
       setSocials((soc as Social[]) ?? []);
       setPendingCount(count ?? 0);
       setViewsWeek(views ?? 0);
+      const rows = (reqs as { status: string }[]) ?? [];
+      setStats({
+        views: viewsAll ?? 0,
+        requests: rows.length,
+        booked: rows.filter((r) => r.status === "booked" || r.status === "completed").length,
+        completed: rows.filter((r) => r.status === "completed").length,
+      });
+      // Отмечаем активность — для онлайн-статуса на анкете
+      sb.rpc("touch_last_seen", { sid: s.id }).then(() => {});
     }
     setReady(true);
   }, [sb, user]);
@@ -106,6 +118,29 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Статистика специалиста */}
+      {specialist && stats && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 20 }}>
+          {(() => {
+            const lvl = loyaltyLevel(specialist.orders_count);
+            const conv = stats.views > 0 ? Math.round((stats.requests / stats.views) * 100) : 0;
+            const cards = [
+              { label: t("Просмотры анкеты"), value: stats.views, sub: `${viewsWeek ?? 0} ${t("за неделю")}` },
+              { label: t("Заявок на связь"), value: stats.requests, sub: `${t("конверсия")} ${conv}%` },
+              { label: t("Броней"), value: stats.booked, sub: `${stats.completed} ${t("выполнено")}` },
+              { label: t("Уровень"), value: lvl ? `${lvl.emoji}` : "—", sub: lvl ? t(lvl.label) : `${specialist.orders_count} / 10 ${t("до уровня")}` },
+            ];
+            return cards.map((c) => (
+              <div key={c.label} className="card card-pad">
+                <div className="muted" style={{ fontSize: "0.82rem" }}>{c.label}</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--brand)" }}>{c.value}</div>
+                <div className="soft" style={{ fontSize: "0.78rem" }}>{c.sub}</div>
+              </div>
+            ));
+          })()}
+        </div>
+      )}
 
       {/* Табы */}
       <div style={{ display: "inline-flex", gap: 4, padding: 4, background: "var(--surface-2)", borderRadius: 999, marginBottom: 20 }}>

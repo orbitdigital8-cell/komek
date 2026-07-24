@@ -5,7 +5,7 @@ import Stars from "@/components/Stars";
 import ShortlistButton from "@/components/ShortlistButton";
 import { useLang } from "@/lib/lang";
 import { expLabel, priceLabelL, profName } from "@/lib/i18n";
-import { isFastResponder, type Profession, type Specialist } from "@/lib/types";
+import { isFastResponder, loyaltyLevel, onlineStatus, type Profession, type Specialist } from "@/lib/types";
 
 export default function SpecialistCard({
   s,
@@ -16,6 +16,8 @@ export default function SpecialistCard({
 }) {
   const { lang, t } = useLang();
   const cover = s.gallery[0] || s.avatar_url;
+  const status = onlineStatus(s.last_seen, lang);
+  const level = loyaltyLevel(s.orders_count);
   return (
     <Link href={`/s/${s.id}`} className="card lift" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ position: "relative", aspectRatio: "4 / 3", background: "var(--surface-2)" }}>
@@ -46,6 +48,7 @@ export default function SpecialistCard({
           <strong style={{ fontSize: "1.05rem", display: "inline-flex", alignItems: "center", gap: 5 }}>
             {s.name}
             {s.verified && <span title={t("Проверен")} style={{ color: "#2a5bd7", fontSize: 13 }}>✔</span>}
+            {level && <span title={t(level.label)} style={{ fontSize: 13 }}>{level.emoji}</span>}
           </strong>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
             <Stars rating={s.rating} />
@@ -54,7 +57,11 @@ export default function SpecialistCard({
         </div>
         <div className="muted" style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           <span>📍 {t(s.city)} · {expLabel(s.experience_years, lang)}</span>
-          {isFastResponder(s) && <span title={t("Отвечает быстро")} style={{ color: "var(--good)", fontWeight: 700, fontSize: "0.78rem" }}>⚡ {t("быстрый ответ")}</span>}
+          {status?.online ? (
+            <span style={{ color: "var(--good)", fontWeight: 700, fontSize: "0.78rem" }}>● {t("онлайн")}</span>
+          ) : isFastResponder(s) ? (
+            <span title={t("Отвечает быстро")} style={{ color: "var(--good)", fontWeight: 700, fontSize: "0.78rem" }}>⚡ {t("быстрый ответ")}</span>
+          ) : null}
         </div>
         <p className="soft" style={{ fontSize: "0.9rem", margin: "2px 0 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
           {t(s.tagline)}

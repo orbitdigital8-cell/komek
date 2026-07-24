@@ -54,16 +54,17 @@ export function isFastResponder(s: Pick<Specialist, "response_minutes" | "respon
   return s.response_minutes != null && s.response_minutes <= 60 && s.response_count >= 3;
 }
 
-// Онлайн-статус: онлайн (< 5 мин), иначе «был N назад» (null — не показываем)
-export function onlineStatus(lastSeen: string | null): { online: boolean; text: string } | null {
+// Онлайн-статус: онлайн (< 5 мин), иначе «был N назад» (null — не показываем).
+// lang — для локализации хвоста «назад».
+export function onlineStatus(lastSeen: string | null, lang: "ru" | "kk" = "ru"): { online: boolean; text: string } | null {
   if (!lastSeen) return null;
   const mins = Math.floor((Date.now() - new Date(lastSeen).getTime()) / 60000);
-  if (mins < 5) return { online: true, text: "онлайн" };
-  if (mins < 60) return { online: false, text: `был ${mins} мин назад` };
+  if (mins < 5) return { online: true, text: lang === "kk" ? "желіде" : "онлайн" };
+  const ago = (n: number, unit: string) => (lang === "kk" ? `${n} ${unit} бұрын болды` : `был ${n} ${unit} назад`);
+  if (mins < 60) return { online: false, text: ago(mins, lang === "kk" ? "мин" : "мин") };
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return { online: false, text: `был ${hrs} ч назад` };
-  const days = Math.floor(hrs / 24);
-  return { online: false, text: `был ${days} дн назад` };
+  if (hrs < 24) return { online: false, text: ago(hrs, lang === "kk" ? "сағ" : "ч") };
+  return { online: false, text: ago(Math.floor(hrs / 24), lang === "kk" ? "күн" : "дн") };
 }
 
 // Уровень лояльности по числу выполненных заказов

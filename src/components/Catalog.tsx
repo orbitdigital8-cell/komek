@@ -11,7 +11,7 @@ type SegFilter = Segment | "all";
 
 // Поля карточки — без тяжёлого «about» в выдаче
 const CARD_COLS =
-  "id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count";
+  "id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count, last_seen, orders_count";
 
 const PAGE = 48;
 

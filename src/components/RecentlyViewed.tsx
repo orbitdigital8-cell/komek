@@ -21,7 +21,7 @@ export default function RecentlyViewed({ professions }: { professions: Professio
       if (!ids.length) return;
       const { data } = await sb
         .from("specialists")
-        .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count")
+        .select("id, profession, name, city, tagline, price_from, experience_years, rating, review_count, tags, gallery, avatar_url, video_url, verified, response_minutes, response_count, last_seen, orders_count")
         .in("id", ids.slice(0, 4))
         .eq("published", true);
       const list = (data as unknown as Specialist[]) ?? [];
