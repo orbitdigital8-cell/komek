@@ -6,7 +6,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useLang } from "@/lib/lang";
 import { profName } from "@/lib/i18n";
-import { formatDate, type OpenRequest, type Profession, type Specialist } from "@/lib/types";
+import { formatDate, loyaltyLevel, type OpenRequest, type Profession, type Specialist } from "@/lib/types";
 
 // Главная для специалиста: его рабочее место — заказы с биржи по его профессии + кабинет.
 export default function SpecialistFeed({ professions }: { professions: Profession[] }) {
@@ -16,6 +16,7 @@ export default function SpecialistFeed({ professions }: { professions: Professio
   const [sp, setSp] = useState<Specialist | null>(null);
   const [orders, setOrders] = useState<OpenRequest[]>([]);
   const [pending, setPending] = useState(0);
+  const [viewsWeek, setViewsWeek] = useState(0);
   const [ready, setReady] = useState(false);
 
   const profMap: Record<string, Profession> = {};
@@ -28,12 +29,15 @@ export default function SpecialistFeed({ professions }: { professions: Professio
       const spec = (s as Specialist) ?? null;
       setSp(spec);
       if (spec) {
-        const [{ data: reqs }, { count }] = await Promise.all([
+        const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+        const [{ data: reqs }, { count }, { count: views }] = await Promise.all([
           sb.from("open_requests").select("*").eq("status", "open").contains("professions", [spec.profession]).order("created_at", { ascending: false }).limit(6),
           sb.from("contact_requests").select("id", { count: "exact", head: true }).eq("specialist_id", spec.id).eq("status", "pending"),
+          sb.from("profile_views").select("id", { count: "exact", head: true }).eq("specialist_id", spec.id).gte("viewed_at", weekAgo),
         ]);
         setOrders((reqs as OpenRequest[]) ?? []);
         setPending(count ?? 0);
+        setViewsWeek(views ?? 0);
       }
       setReady(true);
     })();
@@ -44,24 +48,27 @@ export default function SpecialistFeed({ professions }: { professions: Professio
 
   return (
     <div className="container" style={{ padding: "32px 22px 0" }}>
-      {/* Быстрые действия специалиста */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 28 }}>
-        <Link href="/dashboard" className="card card-pad lift" style={{ textDecoration: "none" }}>
-          <div style={{ fontSize: 26 }}>📋</div>
-          <strong style={{ display: "block", marginTop: 6 }}>{t("Моя анкета")}</strong>
-          <span className="soft" style={{ fontSize: "0.85rem" }}>{sp ? t("Редактировать и статистика") : t("Заполните анкету, чтобы попасть в каталог.")}</span>
-        </Link>
-        <Link href="/dashboard" className="card card-pad lift" style={{ textDecoration: "none" }}>
-          <div style={{ fontSize: 26 }}>📨</div>
-          <strong style={{ display: "block", marginTop: 6 }}>{t("Заявки на связь")} {pending > 0 && <span className="pill-count">{pending}</span>}</strong>
-          <span className="soft" style={{ fontSize: "0.85rem" }}>{t("Подтверждайте и бронируйте")}</span>
-        </Link>
-        <Link href="/orders" className="card card-pad lift" style={{ textDecoration: "none" }}>
-          <div style={{ fontSize: 26 }}>🔔</div>
-          <strong style={{ display: "block", marginTop: 6 }}>{t("Заказы на бирже")}</strong>
-          <span className="soft" style={{ fontSize: "0.85rem" }}>{t("Откликайтесь на подходящие заявки")}</span>
-        </Link>
-      </div>
+      {/* Пульс анкеты — информация, которой нет в навигации */}
+      {sp && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 28 }}>
+          {(() => {
+            const lvl = loyaltyLevel(sp.orders_count);
+            const cards = [
+              { label: t("Новые заявки"), value: pending, sub: pending > 0 ? t("ждут ответа") : t("всё обработано"), href: "/dashboard" },
+              { label: t("Просмотры анкеты"), value: viewsWeek, sub: t("за неделю"), href: `/s/${sp.id}` },
+              { label: t("Выполнено заказов"), value: sp.orders_count, sub: lvl ? `${lvl.emoji} ${t(lvl.label)}` : t("до уровня") + " 10", href: "/dashboard" },
+              { label: t("Рейтинг"), value: sp.rating.toFixed(1), sub: `${sp.review_count} ${t("отзыв(ов)")}`, href: `/s/${sp.id}` },
+            ];
+            return cards.map((c) => (
+              <Link key={c.label} href={c.href} className="card card-pad lift" style={{ textDecoration: "none" }}>
+                <div className="muted" style={{ fontSize: "0.8rem" }}>{c.label}</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--brand)" }}>{c.value}</div>
+                <div className="soft" style={{ fontSize: "0.76rem" }}>{c.sub}</div>
+              </Link>
+            ));
+          })()}
+        </div>
+      )}
 
       {/* Заказы для вас — по вашей профессии */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
