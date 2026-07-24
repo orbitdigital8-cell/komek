@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import Catalog from "@/components/Catalog";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SeasonalPicks from "@/components/SeasonalPicks";
+import HeroActions from "@/components/HeroActions";
 import AiMatch from "@/components/AiMatch";
 import { supabaseServer } from "@/lib/supabase/server";
 import { makeT, type Lang } from "@/lib/i18n";
@@ -55,17 +55,7 @@ export default async function HomePage() {
           <p className="lead" style={{ maxWidth: 600, margin: "0 auto 28px" }}>
             {t("Тамада, ведущие, артисты, фотографы — для праздника. Няни, домработницы и водители — для дома. Смотрите видео-визитки и портфолио, связывайтесь напрямую.")}
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="#catalog" className="btn btn-primary">
-              {t("Смотреть каталог")}
-            </a>
-            <Link href="/register?role=specialist" className="btn btn-outline">
-              {t("Я специалист — разместить анкету")}
-            </Link>
-          </div>
-          <div style={{ marginTop: 14 }}>
-            <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
-          </div>
+          <HeroActions />
 
           {/* мини-доверие */}
           <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
