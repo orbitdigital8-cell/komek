@@ -121,7 +121,7 @@ export default function TeamBuilder({ initial, professions, reasonById, budget }
               ✓ {t("Запросы отправлены")}: {sent}. {t("Ответы — в разделе «Мои запросы».")}
             </div>
           ) : (
-            <button className="btn btn-primary" disabled={sending || team.length === 0} onClick={requestAll} style={{ alignSelf: "flex-start" }}>
+            <button className="btn btn-primary cta-wide" disabled={sending || team.length === 0} onClick={requestAll} style={{ alignSelf: "flex-start" }}>
               {sending ? t("Отправляем…") : `📨 ${t("Запросить контакты у всей команды")}`}
             </button>
           )

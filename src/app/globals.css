@@ -412,6 +412,21 @@ button {
   .hide-mobile {
     display: none !important;
   }
+  /* Чипы (примеры ИИ, фильтры) — переносим и ограничиваем шириной экрана,
+     чтобы длинные подсказки вроде «Команда на той на 100 гостей…» не вылезали */
+  .chip {
+    white-space: normal;
+    max-width: 100%;
+    font-size: 0.84rem;
+    padding: 7px 12px;
+  }
+  /* Длинные кнопки-призывы — на всю ширину и с переносом текста */
+  .cta-wide {
+    width: 100%;
+    align-self: stretch !important;
+    white-space: normal;
+    text-align: center;
+  }
   header .container {
     gap: 6px !important;
     padding-left: 10px;
