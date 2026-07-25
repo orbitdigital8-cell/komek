@@ -107,14 +107,16 @@ export async function POST(req: Request) {
   let data = city ? await fetchCatalog(true) : await fetchCatalog(false);
   if (city && data.length < 2) data = await fetchCatalog(false);
 
-  // Компактно (меньше токенов): id|профессия|город|цена|рейтинг
-  const compact = data.map((s) => `${s.id}|${s.profession}|${s.city}|${s.price_from ?? "?"}|★${s.rating}`);
+  // Экономия токенов: вместо длинных UUID даём ИИ короткие номера (1,2,3…),
+  // а после ответа мапим номер обратно в id. Так каждый запрос тратит в разы меньше
+  // токенов → бесплатных лимитов провайдеров хватает намного дольше.
+  const compact = data.map((s, i) => `${i + 1}|${s.profession}|${s.city}|${s.price_from ?? "?"}|★${s.rating}`);
 
   const text = await aiComplete(
     `Ты — подбор команды на маркетплейсе Kömek (Казахстан: тои, праздники, домашние услуги).
 Запрос клиента: «${String(query).slice(0, 500)}»
 
-Каталог (id|профессия|город|цена от ₸|рейтинг), по одному в строке:
+Каталог (номер|профессия|город|цена от ₸|рейтинг), по одному в строке:
 ${compact.join("\n")}
 
 ГЛАВНОЕ ПРАВИЛО — уважай запрос клиента:
@@ -122,13 +124,21 @@ ${compact.join("\n")}
 - Собирай команду из РАЗНЫХ профессий ТОЛЬКО если клиент явно просит команду / «собрать той» / «весь праздник» / перечисляет несколько услуг. Для команды можно давать по 1-2 варианта на каждую профессию.
 ${city ? `ГОРОД: мероприятие в городе ${city}. Все специалисты команды ДОЛЖНЫ быть из одного города ${city} — на один той нельзя собрать людей из разных городов.` : ""}
 СТРОГО ПО БЮДЖЕТУ: если бюджет назван, сумма цен «от» выбранных НЕ должна превышать бюджет. Если денег не хватает — включи только самых важных в рамках бюджета и честно напиши в intro, что осталось за рамками. Лучше уложиться в бюджет, чем превысить.
-Не выдумывай id. reason — коротко, до 8 слов. Верни ТОЛЬКО JSON без markdown и пояснений: {"intro": "1-2 предложения по-русски", "picks": [{"id": "...", "reason": "короткое почему"}]}`,
-    1600,
+Используй ТОЛЬКО номера из каталога. reason — коротко, до 8 слов. Верни ТОЛЬКО JSON без markdown: {"intro": "1-2 предложения по-русски", "picks": [{"n": номер, "reason": "короткое почему"}]}`,
+    900,
     true, // строгий JSON-режим
   );
 
-  const json = extractJson<{ intro: string; picks: { id: string; reason: string }[] }>(text);
-  if (!json) return NextResponse.json({ error: "bad ai response" }, { status: 500 });
+  const raw = extractJson<{ intro: string; picks: { n: number; reason: string }[] }>(text);
+  if (!raw) return NextResponse.json({ error: "bad ai response" }, { status: 500 });
+
+  // Мапим номера обратно в id специалистов
+  const json = {
+    intro: raw.intro,
+    picks: (raw.picks ?? [])
+      .map((p) => { const s = data[Number(p.n) - 1]; return s ? { id: s.id, reason: p.reason } : null; })
+      .filter((x): x is { id: string; reason: string } => x !== null),
+  };
 
   // Каталог, из которого реально можно выбирать (уже отфильтрован по городу, если задан)
   const byId = new Map(data.map((s) => [s.id, s]));
