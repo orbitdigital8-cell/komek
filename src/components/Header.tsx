@@ -80,20 +80,13 @@ export default function Header() {
         </span>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
-          <AiNavLink />
-          <Link href="/orders" className="btn btn-ghost btn-sm">
-            {role === "specialist" ? (
-              <>
-                <span className="cta-full">{t("Заказы на бирже")}</span>
-                <span className="cta-short">{t("Заказы")}</span>
-              </>
-            ) : (
-              <>
-                <span className="cta-full">{t("Подать заявку")}</span>
-                <span className="cta-short">{t("Заявка")}</span>
-              </>
-            )}
-          </Link>
+          {/* Второстепенное на мобильном прячем, чтобы влезли «Войти»/«Анкета» */}
+          <span className="hide-mobile" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <AiNavLink />
+            <Link href="/orders" className="btn btn-ghost btn-sm">
+              {role === "specialist" ? t("Заказы на бирже") : t("Подать заявку")}
+            </Link>
+          </span>
           {ready && ids.length > 0 && (
             <Link href="/shortlist" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               ❤️ <span className="pill-count" style={{ background: "var(--brand)" }}>{ids.length}</span>

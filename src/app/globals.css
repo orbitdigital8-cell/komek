@@ -407,6 +407,11 @@ button {
     padding: 6px 8px;
     font-size: 0.8rem;
   }
+  /* На мобильном прячем второстепенное в шапке (ИИ-подбор, заявка),
+     чтобы «Войти» и «Разместить анкету» не уезжали за экран */
+  .hide-mobile {
+    display: none !important;
+  }
   header .container {
     gap: 6px !important;
     padding-left: 10px;
