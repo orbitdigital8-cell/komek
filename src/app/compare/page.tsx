@@ -59,7 +59,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
 
       <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--surface)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: `160px repeat(${list.length}, minmax(210px, 1fr))`, minWidth: "fit-content" }}>
+        <div className="compare-grid" style={{ display: "grid", gridTemplateColumns: `160px repeat(${list.length}, minmax(210px, 1fr))`, minWidth: "fit-content", ...({ "--n": list.length } as React.CSSProperties) }}>
           {label("")}
           {list.map((s) => (
             <div key={s.id} style={{ padding: "16px 14px", textAlign: "center", background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>

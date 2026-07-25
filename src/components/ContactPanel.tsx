@@ -215,7 +215,7 @@ export default function ContactPanel({ specialist, busyDates = [], packages = []
   }
 
   return (
-    <div className="card card-pad" style={{ position: "sticky", top: 84 }}>
+    <div id="contact-panel" className="card card-pad" style={{ position: "sticky", top: 84, scrollMarginTop: 80 }}>
       {priceBlock}
       <hr className="divider" style={{ margin: "12px 0 16px" }} />
       {body()}

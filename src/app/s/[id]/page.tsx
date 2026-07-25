@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Gallery from "@/components/Gallery";
 import VideoCard from "@/components/VideoCard";
 import ContactPanel from "@/components/ContactPanel";
+import MobileContactBar from "@/components/MobileContactBar";
 import Stars from "@/components/Stars";
 import ShortlistButton from "@/components/ShortlistButton";
 import ReviewsList from "@/components/ReviewsList";
@@ -260,6 +261,9 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
         {/* Правая колонка — контакты */}
         <ContactPanel specialist={s} busyDates={busyDates} packages={packages} />
       </div>
+
+      {/* Мобильная закреплённая кнопка связи (гость видит её сразу) */}
+      <MobileContactBar ownerId={s.owner_id} />
     </div>
   );
 }

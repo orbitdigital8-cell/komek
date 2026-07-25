@@ -364,12 +364,34 @@ button {
   font-weight: 700;
 }
 
+/* Мобильная кнопка связи на анкете — по умолчанию скрыта (десктоп) */
+.mobile-contact-bar,
+.mobile-contact-bar-spacer {
+  display: none;
+}
 @media (max-width: 860px) {
   .profile-grid {
     grid-template-columns: 1fr !important;
   }
   .editor-grid {
     grid-template-columns: 1fr !important;
+  }
+  /* Закреплённая снизу кнопка связи на мобильном (панель контактов уходит вниз) */
+  .mobile-contact-bar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(255, 253, 249, 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+  }
+  .mobile-contact-bar-spacer {
+    display: block;
+    height: 74px;
   }
 }
 
@@ -426,6 +448,18 @@ button {
     align-self: stretch !important;
     white-space: normal;
     text-align: center;
+  }
+  /* Сравнение: сужаем колонки, чтобы на телефоне влезали 2 специалиста рядом с подписями */
+  .compare-grid {
+    grid-template-columns: 88px repeat(var(--n), minmax(120px, 1fr)) !important;
+  }
+  .compare-grid > div {
+    padding: 9px 7px !important;
+    font-size: 0.8rem;
+  }
+  .compare-grid img.avatar {
+    width: 48px !important;
+    height: 48px !important;
   }
   header .container {
     gap: 6px !important;
