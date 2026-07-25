@@ -60,15 +60,14 @@ const POLLINATIONS_MODEL = process.env.POLLINATIONS_MODEL ?? "openai";
 
 function providers(): Provider[] {
   const list: Provider[] = [
-    // Бесплатный и без лимитов, без API-ключа — основной движок платформы (жми сколько хочешь).
-    // json_object у анонимного тарифа платный (402), поэтому НЕ шлём его — «рассуждения»
-    // модель отдаёт в отдельном поле reasoning, а content остаётся чистым (extractJson разберёт).
-    { name: "pollinations", key: "public", call: (p, m) => openaiCompatible("https://text.pollinations.ai/openai", null, POLLINATIONS_MODEL, p, m, false) },
+    // Надёжные провайдеры по ключу — первыми (стабильнее и быстрее).
     { name: "groq", key: process.env.GROQ_API_KEY, call: (p, m, j) => openaiCompatible("https://api.groq.com/openai/v1/chat/completions", process.env.GROQ_API_KEY!, GROQ_MODEL, p, m, j) },
     { name: "mistral", key: process.env.MISTRAL_API_KEY, call: (p, m, j) => openaiCompatible("https://api.mistral.ai/v1/chat/completions", process.env.MISTRAL_API_KEY!, MISTRAL_MODEL, p, m, j) },
     { name: "cohere", key: process.env.COHERE_API_KEY, call: (p, m, j) => cohereComplete(process.env.COHERE_API_KEY!, p, m, j) },
     { name: "openrouter", key: process.env.OPENROUTER_API_KEY, call: (p, m, j) => openaiCompatible("https://openrouter.ai/api/v1/chat/completions", process.env.OPENROUTER_API_KEY!, OPENROUTER_MODEL, p, m, j, { "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "https://komek.kz", "X-Title": "Komek" }) },
     { name: "cerebras", key: process.env.CEREBRAS_API_KEY, call: (p, m, j) => openaiCompatible("https://api.cerebras.ai/v1/chat/completions", process.env.CEREBRAS_API_KEY!, CEREBRAS_MODEL, p, m, j) },
+    // Бесплатный без ключа — ПОСЛЕДНИМ, как запасной (их анонимный доступ нестабилен: то 200, то 402).
+    { name: "pollinations", key: "public", call: (p, m) => openaiCompatible("https://text.pollinations.ai/openai", null, POLLINATIONS_MODEL, p, m, false) },
   ];
   return list.filter((x) => !!x.key);
 }
