@@ -466,6 +466,13 @@ button {
     width: 46px !important;
     height: 46px !important;
   }
+  /* Кнопка «Открыть и запросить» в узкой колонке — переносим текст и ужимаем */
+  .compare-grid .btn {
+    white-space: normal !important;
+    font-size: 0.72rem !important;
+    padding: 7px 6px !important;
+    line-height: 1.2;
+  }
   header .container {
     gap: 6px !important;
     padding-left: 10px;
