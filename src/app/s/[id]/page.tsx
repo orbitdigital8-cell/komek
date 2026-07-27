@@ -11,7 +11,7 @@ import ReviewsList from "@/components/ReviewsList";
 import SocialLinks from "@/components/SocialLinks";
 import { supabaseServer } from "@/lib/supabase/server";
 import { fieldsFor, formatAttr } from "@/lib/fields";
-import { expLabel, makeT, profName, tText, type Lang } from "@/lib/i18n";
+import { expLabel, makeT, priceLabelL, profName, tText, type Lang } from "@/lib/i18n";
 import ReportButton from "@/components/ReportButton";
 import ViewTracker from "@/components/ViewTracker";
 import SpecialistCard from "@/components/SpecialistCard";
@@ -103,6 +103,11 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
                 📍 {t(s.city)} · {expLabel(s.experience_years, lang)}
                 {s.orders_count > 0 && <> · ✓ {s.orders_count} {t("заказов на Kömek")}</>}
                 {(() => { const st = onlineStatus(s.last_seen, lang); return st && !st.online ? <> · {st.text}</> : null; })()}
+              </div>
+              {/* Цена сразу в шапке — на мобильном панель контактов уходит вниз */}
+              <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span className="muted" style={{ fontSize: "0.8rem" }}>{t("Стоимость")}:</span>
+                <strong style={{ fontSize: "1.2rem", color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>
               </div>
             </div>
             <div style={{ marginLeft: "auto" }}>

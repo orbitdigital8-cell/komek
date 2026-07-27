@@ -85,7 +85,7 @@ export default function ShortlistPage() {
       <p className="soft" style={{ marginBottom: 20 }}>{t("Сравните выбранных специалистов и выберите лучшего.")}</p>
 
       <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "var(--surface)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: gridCols, minWidth: "fit-content" }}>
+        <div className="compare-grid" style={{ display: "grid", gridTemplateColumns: gridCols, minWidth: "fit-content", ...({ "--n": cols } as React.CSSProperties) }}>
           {/* Шапка: карточки специалистов */}
           {label("")}
           {specialists.map((s, i) => (
