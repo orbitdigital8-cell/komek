@@ -471,12 +471,25 @@ button {
   .catalog-filters .input {
     flex: 1 1 100% !important;
   }
-  /* Шапка профиля специалиста: аватар и имя не разъезжаются */
+  /* Шапка профиля специалиста: аватар + текст в ряд, кнопка «В избранное» — на всю ширину снизу */
   .profile-head {
     align-items: flex-start !important;
+    flex-wrap: wrap !important;
   }
   .profile-head .avatar {
     width: 56px !important;
     height: 56px !important;
+  }
+  .profile-head > div:first-of-type {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+  .profile-head > div:last-of-type {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  /* Плавающую плашку «Сравнить» на анкете поднимаем над кнопкой «Связаться» */
+  .shortlist-bar.on-profile {
+    bottom: 82px !important;
   }
 }

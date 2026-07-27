@@ -13,8 +13,11 @@ export default function ShortlistBar() {
   // Не показываем на самой странице избранного и пока пусто
   if (!ready || ids.length === 0 || pathname === "/shortlist") return null;
 
+  const onProfile = pathname?.startsWith("/s/");
+
   return (
     <div
+      className={`shortlist-bar${onProfile ? " on-profile" : ""}`}
       style={{
         position: "fixed",
         left: "50%",

@@ -105,9 +105,9 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
                 {(() => { const st = onlineStatus(s.last_seen, lang); return st && !st.online ? <> · {st.text}</> : null; })()}
               </div>
               {/* Цена сразу в шапке — на мобильном панель контактов уходит вниз */}
-              <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 6 }}>
+              <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
                 <span className="muted" style={{ fontSize: "0.8rem" }}>{t("Стоимость")}:</span>
-                <strong style={{ fontSize: "1.2rem", color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>
+                <strong style={{ fontSize: "1.2rem", color: "var(--brand)", whiteSpace: "nowrap" }}>{priceLabelL(s.price_from, lang)}</strong>
               </div>
             </div>
             <div style={{ marginLeft: "auto" }}>
