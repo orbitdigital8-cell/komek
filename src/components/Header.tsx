@@ -88,7 +88,7 @@ export default function Header() {
             </Link>
           </span>
           {ready && ids.length > 0 && (
-            <Link href="/shortlist" className="btn btn-ghost btn-sm" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <Link href="/shortlist" className="btn btn-ghost btn-sm hide-mobile" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               ❤️ <span className="pill-count" style={{ background: "var(--brand)" }}>{ids.length}</span>
             </Link>
           )}
