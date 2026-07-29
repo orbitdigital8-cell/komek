@@ -138,7 +138,7 @@ export default async function SpecialistPage({ params }: { params: Promise<{ id:
                 <h3 className="h2" style={{ fontSize: "1.15rem", marginBottom: 10 }}>{t("Характеристики")}</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
                   {rows.map((r) => (
-                    <div key={r.label} className="card" style={{ padding: "10px 14px" }}>
+                    <div key={r.label} className="card" style={{ padding: "10px 14px", borderLeft: "3px solid var(--accent)" }}>
                       <div className="muted" style={{ fontSize: "0.78rem" }}>{r.label}</div>
                       <strong style={{ fontSize: "0.95rem" }}>{r.val}</strong>
                     </div>
