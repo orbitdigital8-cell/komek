@@ -175,7 +175,7 @@ export default function Catalog({
       </div>
 
       {/* Фильтр по профессии — переносится по строкам, без горизонтальной прокрутки */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+      <div className="prof-chips" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
         <button className={`chip ${!prof ? "chip-active" : ""}`} onClick={() => setProf(null)}>
           {t("Все специальности")}
         </button>

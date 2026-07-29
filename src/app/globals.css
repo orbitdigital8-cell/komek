@@ -497,6 +497,25 @@ button {
     font-size: 0.84rem;
     padding: 7px 12px;
   }
+  /* Фильтр специальностей — на телефоне одна свайп-лента вместо стены из 21 чипа */
+  .prof-chips {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+  }
+  .prof-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .prof-chips .chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    max-width: none;
+    scroll-snap-align: start;
+  }
+
   /* Длинные кнопки-призывы — на всю ширину и с переносом текста */
   .cta-wide {
     width: 100%;
