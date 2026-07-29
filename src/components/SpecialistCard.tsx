@@ -19,22 +19,24 @@ export default function SpecialistCard({
   const status = onlineStatus(s.last_seen, lang);
   const level = loyaltyLevel(s.orders_count);
   return (
-    <Link href={`/s/${s.id}`} className="card lift" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <div style={{ position: "relative", aspectRatio: "4 / 3", background: "var(--surface-2)" }}>
+    <Link href={`/s/${s.id}`} className="card lift spec-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div className="card-media" style={{ position: "relative", aspectRatio: "4 / 3", background: "var(--surface-2)", overflow: "hidden" }}>
         {cover && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img className="card-img" src={cover} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         )}
+        {/* Мягкая подложка снизу — для глубины и читаемости бейджей */}
+        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,24,48,.28), transparent 42%)", pointerEvents: "none" }} />
         <span
           className="badge"
-          style={{ position: "absolute", top: 10, left: 10, background: "rgba(255,255,255,.92)", color: "var(--brand)", fontWeight: 700, boxShadow: "var(--shadow-sm)" }}
+          style={{ position: "absolute", top: 10, left: 10, background: "rgba(255,253,249,.9)", color: "var(--brand)", fontWeight: 700, boxShadow: "var(--shadow-sm)", backdropFilter: "blur(6px)" }}
         >
           {prof?.emoji} {profName(prof, lang) || s.profession}
         </span>
         {s.video_url && (
           <span
             className="badge"
-            style={{ position: "absolute", bottom: 10, left: 10, background: "rgba(28,24,48,.72)", color: "#fff" }}
+            style={{ position: "absolute", bottom: 10, left: 10, background: "rgba(28,24,48,.6)", color: "#fff", backdropFilter: "blur(6px)" }}
           >
             ▶ {t("Видео")}
           </span>
@@ -75,9 +77,11 @@ export default function SpecialistCard({
             ))}
           </div>
         )}
-        <div style={{ marginTop: "auto", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <strong style={{ color: "var(--brand)" }}>{priceLabelL(s.price_from, lang)}</strong>
-          <span className="soft" style={{ fontSize: "0.85rem", fontWeight: 600 }}>{t("Смотреть →")}</span>
+        <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <strong style={{ color: "var(--brand)", fontSize: "1.02rem" }}>{priceLabelL(s.price_from, lang)}</strong>
+          <span className="card-cta" style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--brand)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {t("Смотреть")} <span className="card-cta-arrow">→</span>
+          </span>
         </div>
       </div>
     </Link>

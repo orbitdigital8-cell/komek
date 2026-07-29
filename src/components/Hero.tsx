@@ -33,7 +33,7 @@ export default function Hero({ lang }: { lang: Lang }) {
     : null;
 
   return (
-    <div className="container" style={{ position: "relative", padding: "64px 22px 52px", textAlign: "center" }}>
+    <div className="container reveal-up" style={{ position: "relative", padding: "64px 22px 52px", textAlign: "center" }}>
       <span className="badge badge-soft" style={{ marginBottom: 18, padding: "7px 16px", fontSize: "0.82rem" }}>
         ✦ {t("Kömek — нужный специалист под любой случай")}
       </span>
@@ -56,10 +56,16 @@ export default function Hero({ lang }: { lang: Lang }) {
         <Link href="/how" className="link" style={{ fontSize: "0.92rem" }}>{t("Как это работает")} →</Link>
       </div>
 
-      <div style={{ display: "flex", gap: 26, justifyContent: "center", flexWrap: "wrap", marginTop: 34, color: "var(--text-soft)", fontSize: "0.9rem", fontWeight: 600 }}>
-        <span>🎯 {t("20+ специальностей")}</span>
-        <span>⭐ {t("Отзывы от реальных клиентов")}</span>
-        <span>🔒 {t("Контакты — после подтверждения")}</span>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 34 }}>
+        {[
+          ["🎯", t("20+ специальностей")],
+          ["⭐", t("Отзывы от реальных клиентов")],
+          ["🔒", t("Контакты — после подтверждения")],
+        ].map(([icon, label]) => (
+          <span key={label} className="trust-pill">
+            <span aria-hidden>{icon}</span> {label}
+          </span>
+        ))}
       </div>
     </div>
   );
